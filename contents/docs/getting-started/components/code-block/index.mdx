@@ -1,50 +1,159 @@
 ---
-title: Code Block
-description: This section previews the Code Block features in markdown.
+title: Gradient Button
+description: React Native button featuring a static linear gradient background. Shows a subtle overlay on press and supports loading/disabled states.
 ---
-
-The Code Block in this documentation allows you to display code snippets with optional line numbering and line highlighting.
-
-## Preview
-
-```javascript:main.js showLineNumbers {3-4}
-function isRocketAboutToCrash() {
-    // Check if the rocket is stable
-    if (!isStable()) {
-        NoCrash(); // Prevent the crash
-    }
-}
-```
-
-```go:main.go
-package main
-import "fmt"
-
-func main() {
-    fmt.Println("Hello, world!")
-}
-```
-
-In this example, line numbers are displayed for lines 1 to 4. You can specify which lines to highlight using the format `{2,3-5}`.
 
 ## Usage
 
 You can directly use the following syntax to create a code block with line numbers and highlight specific lines:
 
-````md
-```javascript:main.js showLineNumbers {3-4}
-function isRocketAboutToCrash() {
-    // Check if the rocket is stable
-    if (!isStable()) {
-        NoCrash(); // Prevent the crash
-    }
+<Tabs defaultValue="code" className="pt-5 pb-1">
+  <TabsList>
+    <TabsTrigger value="code"><MyIcons.SourceCodeIcon className="h-4 w-4" />Code</TabsTrigger>
+    <TabsTrigger value="preview"><MyIcons.ScreenShareIcon className="h-4 w-4" />Preview</TabsTrigger>
+  </TabsList>
+  <TabsContent value="code">
+    ```javascript
+import { LinearGradient } from "expo-linear-gradient";
+import { ReactElement } from "react"; // Removed useState, useEffect
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { useAppColors } from '@/hooks/useAppColors';
+
+export interface AnimatedGradientBackgroundButtonProps {
+    accessibilityHint?: string;
+    accessibilityLabel?: string;
+    Icon?: ReactElement;
+    isDisabled?: boolean;
+    isLoading?: boolean;
+    onPress: () => void;
+    title: string;
 }
+
+const HEIGHT = 42;
+
+const styles = StyleSheet.create({
+    contentContainer: { 
+        alignItems: "center",
+        flexDirection: "row",
+        gap: 8,
+        height: HEIGHT,
+        justifyContent: "center",
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        position: "absolute",
+        width: "100%",       
+        top: 0,          
+        left: 0,            
+        zIndex: 1,           
+    },
+    linearGradient: {
+        height: HEIGHT,
+        width: '100%', // Gradient just needs to fill its container
+    },
+    // This is the main Pressable container, handles border radius and overflow
+    outerContainer: {
+        borderRadius: 8,
+        overflow: "hidden",
+        width: "100%",
+        height: HEIGHT, // Set height here directly
+        position: 'relative', // Needed for absolute positioning of contentContainer
+    },
+    title: {
+        flexShrink: 1,
+        fontSize: 18,
+        fontWeight: "600",
+    },
+});
+
+export const GradientButton = ({
+    accessibilityHint,
+    accessibilityLabel,
+    Icon,
+    isDisabled = false,
+    isLoading = false,
+    onPress,
+    title,
+    // reduceMotion prop is received but not used internally anymore
+}: AnimatedGradientBackgroundButtonProps) => {
+    const colors = useAppColors();
+
+    return (
+        <Pressable
+            accessibilityHint={accessibilityHint}
+            accessibilityLabel={accessibilityLabel}
+            accessibilityRole="button"
+            accessibilityState={{
+                busy: isLoading,
+                disabled: isDisabled || isLoading,
+            }}
+            disabled={isDisabled || isLoading}
+            
+            onPress={onPress}
+        >
+            {({ pressed }) => (
+                <View
+                    // Removed onLayout
+                    style={[
+                        styles.outerContainer,
+                        // Apply opacity for disabled state to the whole container
+                        { opacity: isDisabled ? 0.5 : 1 },
+                    ]}
+                >
+                    {/* Static LinearGradient as the background */}
+                    <LinearGradient
+                        colors={[colors.PrimaryNormal, colors.PrimaryDisable]}
+                        end={{ x: 1, y: 1 }}
+                        start={{ x: 0, y: 1 }}
+                        style={styles.linearGradient} // Use simplified style
+                    />
+                    {/* Content View positioned absolutely on top */}
+                    <View
+                        style={[
+                            styles.contentContainer,
+                            {
+                                // Apply press effect by changing background (overlay)
+                                backgroundColor: pressed && !isDisabled ? colors.PrimaryDisable : "transparent",
+                            },
+                        ]}
+                    >
+                        {isLoading ? (
+                            <ActivityIndicator color={colors.Neutral700} size={18} /> // Changed color to contrast potentially lighter gradients
+                        ) : (
+                            <>
+                                {Icon}
+                                <Text numberOfLines={1} style={[styles.title, {color: colors.Neutral700}]}>
+                                    {title}
+                                </Text>
+                            </>
+                        )}
+                    </View>
+                </View>
+            )}
+        </Pressable>
+    );
+};
 ```
-````
 
-### Features
+  </TabsContent>
+  <TabsContent value="preview">
+    ```typescript
+    // helloWorld.ts
+    function helloWorld(): void {
+        console.log("Hello, World!");
+    }
+    helloWorld();
+    ```
+  </TabsContent>
+</Tabs>
 
-- **Line Numbers**: Enable line numbers by adding `showLineNumbers` after the opening backticks.
-- **Highlight Lines**: Specify lines to highlight using curly braces (e.g., `{2,3-5}`).
-- **Syntax Highlighting**: Use the appropriate language for syntax highlighting.
+### Props
 
+| Prop                 | Type           | Default | Required | Description                                    |
+| -------------------- | -------------- | ------- | -------- | ---------------------------------------------- |
+| `title`              | `string`       |         | Yes      | Text label displayed on the button.            |
+| `onPress`            | `() => void`   |         | Yes      | Function called when pressed.                  |
+| `Icon`               | `ReactElement` |         | No       | Optional icon element shown left of the title. |
+| `isDisabled`         | `boolean`      | `false` | No       | Disables interaction and reduces opacity.      |
+| `isLoading`          | `boolean`      | `false` | No       | Shows loading indicator instead of content.    |
+| `accessibilityHint`  | `string`       |         | No       | Accessibility hint for screen readers.         |
+| `accessibilityLabel` | `string`       |         | No       | Primary accessibility label.                   |

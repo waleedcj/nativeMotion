@@ -224,6 +224,34 @@ pre > code {
   background-color: transparent;
 }
 
+/* --- Specific Scrollbar Styles for Code Blocks (.prose pre) --- */
+/* --- Forces dark theme scrollbar regardless of page theme --- */
+
+/* Standard scrollbar properties */
+.prose pre {
+  scrollbar-width: thin;
+  /* Use a fixed dark thumb color and transparent track */
+  scrollbar-color: #555 transparent; /* Adjust #555 if needed */
+}
+
+/* Webkit scrollbar properties */
+.prose pre::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.prose pre::-webkit-scrollbar-track {
+  background-color: transparent; /* Keep track transparent */
+}
+
+.prose pre::-webkit-scrollbar-thumb {
+  /* Use a fixed dark thumb color */
+  background-color: #555; /* Adjust #555 if needed */
+  border-radius: 9999px;
+  border: 2px solid transparent; /* Maintain padding effect */
+  background-clip: content-box;
+}
+
 .rehype-code-title {
   @apply flex items-center gap-2;
 }

@@ -62,7 +62,7 @@ export default function RootLayout({
           // enableSystem
           disableTransitionOnChange
         >
-          <div className="fixed inset-0 bg-background bg-grid-pattern bg-[size:6rem_4rem] -z-10" />
+  
 
           <div className="relative z-0 flex min-h-screen flex-col">
             <Navbar />

@@ -18,7 +18,7 @@ export default function Copy({ content }: { content: string }) {
 
   return (
     <Button
-      variant="secondary"
+      variant="copy"
       className="border"
       size="xs"
       onClick={handleCopy}

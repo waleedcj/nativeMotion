@@ -10,6 +10,7 @@ import { page_routes, ROUTES } from "./routes-config";
 import { visit } from "unist-util-visit";
 import matter from "gray-matter";
 import { getIconName, hasSupportedExtension } from "./utils";
+import { MyIcons } from "@/components/icons";
 
 // custom components imports
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -49,6 +50,7 @@ const components = {
   tr: TableRow,
   tbody: TableBody,
   t: TableCell,
+  MyIcons
 };
 
 // can be used for other pages like blogs, Guides etc

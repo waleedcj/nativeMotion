@@ -1,72 +1,203 @@
-.keyword {
-  color: #d73a49; /* GitHub Red */
+/* === PrismJS One Dark Theme === */
+/* Based on https://github.com/PrismJS/prism-themes/blob/master/themes/prism-one-dark.css */
+/* Adapted for .dark class selector */
+
+code[class*="language-"],
+pre[class*="language-"] {
+	color: #FAFAFA; /* Default text color */
+	background: none;
+	/* font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace; */
+	font-size: 1em;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	word-wrap: normal;
+	line-height: 1.5;
+
+	-moz-tab-size: 4;
+	-o-tab-size: 4;
+	tab-size: 4;
+
+	-webkit-hyphens: none;
+	-moz-hyphens: none;
+	-ms-hyphens: none;
+	hyphens: none;
 }
 
-.function {
-  color: #6f42c1; /* GitHub Purple */
+pre[class*="language-"] {
+	padding: 1em;
+	margin: .5em 0;
+	overflow: auto;
+	border-radius: 0.3em;
 }
 
-.punctuation {
-  color: #24292e; /* GitHub Black */
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+	/* Applied by prose-pre:bg-background / prose-code:bg-* in Typography.tsx */
+	background: #282c34;
 }
 
-.comment {
-  color: #6a737d; /* GitHub Muted Gray */
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+	padding: .1em .3em;
+	border-radius: .3em;
+	white-space: normal;
 }
 
-.string,
-.constant,
-.annotation,
-.boolean,
-.number {
-  color: #005cc5; /* GitHub Blue */
+/* --- Base Tokens --- */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+	color: #5c6370; /* Grey */
+	font-style: italic;
 }
 
-.tag {
-  color: #22863a; /* GitHub Green */
+.token.punctuation {
+	color: #abb2bf; /* Light Grey */
 }
 
-.attr-name {
-  color: #6f42c1; /* GitHub Purple */
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+	color: #e06c75; /* Coral */
 }
 
-.attr-value {
-  color: #e36209; /* GitHub Orange */
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+	color: #98c379; /* Green */
 }
 
-/* Dark Mode */
-.dark .keyword {
-  color: #f97583; /* GitHub Light Red */
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+	color: #56b6c2; /* Cyan */
 }
 
-.dark .function {
-  color: #d2a8ff; /* GitHub Light Purple */
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+	color: #c678dd; /* Purple */
 }
 
-.dark .punctuation {
-  color: #c9d1d9; /* GitHub Light Gray */
+.token.function,
+.token.class-name {
+	color: #61afef; /* Blue */
 }
 
-.dark .comment {
-  color: #8b949e; /* GitHub Muted Gray */
+.token.regex,
+.token.important,
+.token.variable {
+	color: #d19a66; /* Orange */
 }
 
-.dark .string,
-.dark .constant,
-.dark .annotation,
-.dark .boolean,
-.dark .number {
-  color: #79c0ff; /* GitHub Light Blue */
+.token.important,
+.token.bold {
+	font-weight: bold;
+}
+.token.italic {
+	font-style: italic;
 }
 
-.dark .tag {
-  color: #a5d6ff; /* GitHub Cyan */
+.token.entity {
+	cursor: help;
 }
 
-.dark .attr-name {
-  color: #d2a8ff; /* GitHub Light Purple */
+/* --- Dark Mode Adjustments (using .dark prefix) --- */
+/* Many tokens keep the same color in One Dark, but some might adjust slightly if needed */
+/* This theme is primarily dark, so adjustments are minimal or might involve */
+/* ensuring contrast against your SPECIFIC dark background if it differs from #282c34 */
+
+/* Example: If you needed to adjust punctuation for better contrast in your specific dark mode */
+/* .dark .token.punctuation {
+  color: #cccccc; Slightly lighter grey
+} */
+
+/* --- Language Specific --- */
+
+/* JSX/TSX Specifics */
+.token.tag .token.punctuation {
+    color: #abb2bf; /* Light Grey for < > / */
+}
+.token.tag .token.attr-name {
+    color: #d19a66; /* Orange for props */
+}
+.token.tag .token.attr-value {
+    color: #98c379; /* Green for string prop values */
+}
+.token.tag .token.attr-value .token.punctuation.attr-equals {
+    color: #abb2bf; /* Light Grey for = */
+}
+.token.tag .token.attr-value .token.punctuation:not(.attr-equals) {
+    color: #61afef; /* Blue for { and } in props */
 }
 
-.dark .attr-value {
-  color: #ffa657; /* GitHub Light Orange */
+/* JavaScript/TypeScript Specifics */
+.token.script .token.punctuation {
+  color: #abb2bf;
+}
+.token.parameter {
+  color: #d19a66; /* Orange */
+}
+.token.interpolation .token.punctuation {
+  color: #be5046; /* Darker red for ${} */
+}
+.token.template-string .token.string {
+  color: #98c379; /* Green for content inside template strings */
+}
+
+/* Add more specific language overrides if needed */
+
+
+/* --- Prism Plugin Specifics (Optional - If you use line-highlight etc.) --- */
+pre[data-line] {
+	position: relative;
+}
+
+.line-highlight {
+	position: absolute;
+	left: 0;
+	right: 0;
+	padding: inherit 0;
+	margin-top: 1em; /* Same as pre padding-top */
+	background: hsla(24, 20%, 50%,.08);
+	background: linear-gradient(to right, hsla(24, 20%, 50%,.1) 70%, hsla(24, 20%, 50%,0));
+	pointer-events: none;
+	line-height: inherit;
+	white-space: pre;
+}
+
+.line-highlight:before,
+.line-highlight[data-end]:after {
+	content: attr(data-start);
+	position: absolute;
+	top: .4em;
+	left: .6em;
+	min-width: 1em;
+	padding: 0 .5em;
+	background-color: hsla(24, 20%, 50%,.4);
+	color: hsl(24, 20%, 95%);
+	font: bold 65%/1.5 sans-serif;
+	text-align: center;
+	vertical-align: .3em;
+	border-radius: 999px;
+	text-shadow: none;
+	box-shadow: 0 1px white;
+}
+
+.line-highlight[data-end]:after {
+	content: attr(data-end);
+	top: auto;
+	bottom: .4em;
 }

@@ -46,6 +46,21 @@ export const ROUTES: EachRoute[] = [
       },
     ],
   },
+  {
+    title: "Components",
+    href: "/components",
+    noLink: true,
+    items: [
+      {title: "Scale Animated Button", href: "/components/scale-button"},
+      {title: "3D Animated Button", href: "/components/threedimension-button"},
+      {title: "Icon Animated Button", href: "/components/icon-button"},
+      {title: "Pulse Animated Button", href: "/components/pulse-button"},
+      {title: "Shadow Animated Button", href: "/components/shadow-button"},
+      {title: "Step Animated Button", href: "/components/step-button"},
+      {title: "Smooth Bg Animated Button", href: "/components/smooth-button"},
+      {title: "Gradient Button", href: "/components/gradient-button"},
+    ],
+  },
 ];
 
 type Page = { title: string; href: string };

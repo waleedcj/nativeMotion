@@ -1,9 +1,9 @@
 "use client";
-
 import * as React from "react";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 
-import { cn } from "@/lib/utils";
+// Assuming cn utility is correctly imported (e.g., from "@/lib/utils")
+import { cn } from "@/lib/utils"; // Adjust import path if needed
 
 const Tabs = TabsPrimitive.Root;
 
@@ -14,7 +14,11 @@ const TabsList = React.forwardRef<
   <TabsPrimitive.List
     ref={ref}
     className={cn(
-      "inline-flex h-10 items-center gap-2 text-muted-foreground font-mono -mb-28 w-full border-b",
+      // Default base styles (kept from original shadcn/ui for flex behavior)
+      "inline-flex items-center",
+      // Styles merged from your usage example:
+      "h-12 w-full justify-start rounded-none border-b-0 bg-transparent p-0",
+      // User-provided className takes highest precedence
       className
     )}
     {...props}
@@ -29,7 +33,13 @@ const TabsTrigger = React.forwardRef<
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      "inline-flex items-center justify-center whitespace-nowrap px-1.5 py-[0.58rem] text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:border-primary border-b-2 border-transparent data-[state=active]:text-foreground font-sans",
+      // Default base styles (kept for flex, focus, disabled states etc.)
+      "inline-flex items-center justify-center whitespace-nowrap text-base font-medium ring-offset-background transition-none gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+      // Styles merged from your usage example:
+      "relative w-[128px] rounded-lg border-b-2 border-b-transparent bg-transparent px-4 py-2 text-gray-500 shadow-none",
+      // Active state styles from your usage example (with dark mode variants)
+      "data-[state=active]:bg-gray-200  data-[state=active]:text-gray-900 data-[state=active]:shadow-none",
+       // User-provided className takes highest precedence
       className
     )}
     {...props}
@@ -44,7 +54,11 @@ const TabsContent = React.forwardRef<
   <TabsPrimitive.Content
     ref={ref}
     className={cn(
-      "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ",
+      // Default base styles (kept for focus states)
+      "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+      // Styles merged from your usage example:
+      "mt-0",
+      // User-provided className takes highest precedence
       className
     )}
     {...props}

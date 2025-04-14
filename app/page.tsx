@@ -14,6 +14,7 @@ import Image from "next/image";
 export default function Home() {
 	return (
 		<div className="min-h-screen">
+    <div className="fixed inset-0 bg-background bg-grid-pattern bg-[size:6rem_4rem] -z-10" />
 			<div className="container mx-auto px-4 py-20">
 				<div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 					{/* Left Content */}
