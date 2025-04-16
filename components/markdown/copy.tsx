@@ -22,7 +22,7 @@ export default function Copy({ content }: { content: string }) {
       className="border"
       size="xs"
       onClick={handleCopy}
-    >
+    > 
       {isCopied ? (
         <CheckIcon className="w-3 h-3" />
       ) : (

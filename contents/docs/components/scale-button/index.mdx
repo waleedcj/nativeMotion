@@ -1,0 +1,193 @@
+---
+title: Scale Animated Button
+description: A reusable React Native button component that provides a subtle scaling animation on press. Built with Reanimated, it supports loading/disabled states, icons, and respects reduced motion settings.
+tags: [reanimated, button, animation, react-native, scale]
+---
+
+
+
+<DemoLinkButton href="https://example.com/ghost-demo"  size="lg" variant="default">
+	Live Demo
+  <MyIcons.ScreenShareIcon className="h-4 w-4" />
+</DemoLinkButton>
+
+## Installation
+
+
+  ```typescript:ScaleAnimatedButton.tsx
+import { ReactElement } from "react";
+import { ActivityIndicator, Pressable, StyleSheet, Text } from "react-native";
+import Animated, {
+	interpolate,
+	ReduceMotion,
+	useAnimatedStyle,
+	useSharedValue,
+	withTiming,
+} from "react-native-reanimated";
+import { useAppColors } from '@/hooks/useAppColors';
+
+export interface ResizingButtonProps {
+	accessibilityHint?: string;
+	accessibilityLabel?: string;
+	Icon?: ReactElement;
+	isDisabled?: boolean;
+	isLoading?: boolean;
+	onPress: () => void;
+	scale?: number;
+	title: string;
+	reduceMotion?: "never" | "always" | "system";
+}
+
+const DURATION = 300;
+
+const styles = StyleSheet.create({
+	container: {
+		alignItems: "center",
+		borderRadius: 8,
+		flexDirection: "row",
+		gap: 8,
+		height: 42,
+		justifyContent: "center",
+		paddingHorizontal: 12,
+		paddingVertical: 8,
+	},
+	title: {
+		flexShrink: 1,
+		fontSize: 18,
+		fontWeight: "600",
+	},
+});
+
+export const ScaleAnimatedButton = ({
+	accessibilityHint,
+	accessibilityLabel,
+	Icon,
+	isDisabled = false,
+	isLoading = false,
+	onPress,
+	scale = 0.95,
+	title,
+	reduceMotion = "system",
+}: ResizingButtonProps) => {
+	const transition = useSharedValue(0);
+	const isActive = useSharedValue(false);
+	const colors = useAppColors();
+
+	const motion =
+		reduceMotion === "never"
+			? ReduceMotion.Never
+			: reduceMotion === "always"
+				? ReduceMotion.Always
+				: ReduceMotion.System;
+
+	const animatedStyle = useAnimatedStyle(() => ({
+		transform: [
+			{
+				scale: interpolate(transition.value, [0, 1], [1, scale]),
+			},
+		],
+	}));
+
+	return (
+		<Pressable
+			accessibilityHint={accessibilityHint}
+			accessibilityLabel={accessibilityLabel}
+			accessibilityRole="button"
+			accessibilityState={{
+				busy: isLoading,
+				disabled: isDisabled || isLoading,
+			}}
+			disabled={isDisabled || isLoading}
+			
+			onPress={onPress}
+			onPressIn={() => {
+				isActive.value = true;
+				transition.value = withTiming(1, { duration: DURATION }, () => {
+					if (!isActive.value) {
+						transition.value = withTiming(0, {
+							duration: DURATION,
+							reduceMotion: motion,
+						});
+					}
+				});
+			}}
+			onPressOut={() => {
+				if (transition.value === 1) {
+					transition.value = withTiming(0, {
+						duration: DURATION,
+						reduceMotion: motion,
+					});
+				}
+				isActive.value = false;
+			}}
+		>
+			<Animated.View
+				style={[
+					styles.container,
+					animatedStyle,
+					{
+						opacity: isDisabled ? 0.5 : 1,
+						backgroundColor: colors.PrimaryNormal,
+					},
+				]}
+			>
+				{isLoading ? (
+					<ActivityIndicator color={colors.Neutral700} size={18} />
+				) : (
+					<>
+						{Icon}
+						<Text
+							numberOfLines={1}
+							style={[styles.title, { color: colors.Neutral700 }]}
+						>
+							{title}
+						</Text>
+					</>
+				)}
+			</Animated.View>
+		</Pressable>
+	);
+};
+```
+
+## Usage
+
+
+  ```typescript:App.tsx
+import React, { useState } from 'react';
+import { View, StyleSheet, Alert } from 'react-native';
+import { ScaleAnimatedButton } from "@/components/ui/Buttons/ScaleAnimatedButton";
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+
+export default function App() {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleLoadingPress = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 2500); 
+  };
+
+  return (
+      <ScaleAnimatedButton
+        title="Pay Now"
+        onPress={handleLoadingPress}
+        isLoading={isLoading}
+        Icon={<MaterialIcons name="payment" size={24} color="black" />}
+      />
+  );}
+  ```
+
+## Props
+| Prop                 | Type                           | Default    | Required | Description                                          |
+| -------------------- | ------------------------------ | ---------- | -------- | ---------------------------------------------------- |
+| `title`              | `string`                       |            | Yes      | Text label displayed on the button.                  |
+| `onPress`            | `() => void`                   |            | Yes      | Function called when the button is pressed.          |
+| `Icon`               | `ReactElement`                 |            | No       | Optional icon element displayed left of the title.   |
+| `isDisabled`         | `boolean`                      | `false`    | No       | Disables button interaction and styles it.           |
+| `isLoading`          | `boolean`                      | `false`    | No       | Shows loading indicator instead of title/icon.       |
+| `scale`              | `number`                       | `0.95`     | No       | Scale factor applied during press animation.         |
+| `reduceMotion`       | `'never' \| 'always' \| 'system'` | `'system'` | No       | Controls if animation respects system motion settings. |
+| `accessibilityHint`  | `string`                       |            | No       | Accessibility hint for screen readers.               |
+| `accessibilityLabel` | `string`                       |            | No       | Main accessibility label for the button.             |

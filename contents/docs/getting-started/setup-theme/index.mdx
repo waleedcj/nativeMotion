@@ -1,0 +1,139 @@
+---
+title: Manual Theme Setup
+description: Implement light/dark mode theming by directly using React Native's useColorScheme hook combined with your custom-defined color palettes. This approach gives direct control over color selection within components.
+tags: [theme, colors, react-native, useColorScheme, theming,]
+---
+
+  <Stepper>
+  <StepperItem title="Step 1: Define Your Color Palette">
+  First, ensure you have a file (e.g., `constants/Colors.ts`) defining your color variables for both `light` and `dark` themes.:
+
+    ```typescript:Colors.ts
+    export const Colors = {
+        light: {
+            // Brand Colors
+            PrimaryNormal: "#E3A547",
+            // ... other light theme colors
+            Neutral900: "#000000",
+            bgColor: "#F2F2F2",
+            // ...
+        },
+        dark: {
+            // Brand Colors
+            PrimaryNormal: "#E3A547",
+            // ... other dark theme colors
+            Neutral900: "#FFFFFF",
+            bgColor: "#1C1C1E",
+            // ...
+         },
+};
+    ```
+  </StepperItem>
+
+  <StepperItem title="Step 2: Import Colors and Check Scheme">
+    In each component where you need themed styles, import your `Colors` object and the `useColorScheme` hook from React Native. Use the hook to determine the current scheme and select the corresponding color palette.:
+
+    ```javascript:App.tsx
+   import { Text, View, useColorScheme, StyleSheet } from 'react-native';
+import { Colors } from '@/constants/Colors'; // Adjust path
+
+function MyComponent() {
+  // 1. Get the current color scheme
+  const scheme = useColorScheme();
+
+  // 2. Select the appropriate color palette
+  const currentColors = scheme === 'dark' ? Colors.dark : Colors.light;
+
+  // 3. Use the selected colors in styles
+  return (
+    <View style={[styles.container, { backgroundColor: currentColors.bgColor }]}>
+      <Text style={[styles.text, { color: currentColors.PrimaryNormal }]}>
+        Manually Themed Text
+      </Text>
+      <Text style={{ color: currentColors.Neutral700 }}>
+        Some other text.
+      </Text>
+    </View>
+  );
+}
+
+// Example StyleSheet (can also use inline styles)
+const styles = StyleSheet.create({
+    container: {
+        padding: 16,
+    },
+    text: {
+        fontSize: 18,
+        fontWeight: 'bold',
+    }
+});
+
+export default MyComponent;
+    ```
+
+    You'll need to repeat the `useColorScheme` check and palette selection in every component that requires dynamic theming.
+
+  </StepperItem>
+
+  <StepperItem title="Step 2: Or Simplify with a Custom Hook (Recommended)">
+
+To avoid repeating the logic, create a custom hook (e.g., `useAppColors`) that encapsulates the `useColorScheme` logic and returns the correct color palette.
+
+    ```javascript:useAppColors.ts
+  import { useColorScheme } from 'react-native';
+import { Colors } from '@/constants/Colors'; // Adjust path
+
+export function useAppColors() {
+  const scheme = useColorScheme();
+  // Return the entire color object based on the scheme
+  return scheme === 'dark' ? Colors.dark : Colors.light;
+}
+    ```
+  </StepperItem>
+
+    <StepperItem title="Step 3: Use the Custom Color Hook">
+    Now, simply call your custom hook within components to get the appropriate colors, making your component code cleaner.:
+
+
+    ```javascript:App.tsx
+   import { Text, View, StyleSheet } from 'react-native';
+import { useAppColors } from '@/hooks/useAppColors'; // Adjust path
+
+function App() {
+  // 1. Get the current color palette from the hook
+  const colors = useAppColors();
+
+  // 2. Use the colors directly
+  return (
+    <View style={[styles.container, { backgroundColor: colors.bgColor }]}>
+      <Text style={[styles.text, { color: colors.PrimaryNormal }]}>
+        Hook-Based Themed Text
+      </Text>
+       <Text style={{ color: colors.Neutral700 }}>
+        Some other text (hook).
+      </Text>
+    </View>
+  );
+}
+
+// Example StyleSheet
+const styles = StyleSheet.create({
+    container: {
+        padding: 16,
+    },
+    text: {
+        fontSize: 18,
+        fontWeight: 'bold',
+    }
+});
+
+
+export default App;
+    ```
+      This approach provides dynamic theme support by leveraging the built-in `useColorScheme` hook, offering flexibility without relying on a context provider for color distribution. Centralizing the logic in a custom hook is recommended for maintainability.
+
+  </StepperItem>
+
+
+</Stepper>
+

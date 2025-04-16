@@ -1,0 +1,212 @@
+---
+title: Icon Animated Button
+description:  the icon animates towards the center, flipping horizontally on return, while the title fades out on press. Uses Reanimated.
+tags: [reanimated, button, animation, react-native, icon]
+---
+
+
+<DemoLinkButton href="https://example.com/ghost-demo"  size="lg" variant="default">
+	Live Demo
+  <MyIcons.ScreenShareIcon className="h-4 w-4" />
+</DemoLinkButton>
+
+## Installation
+
+  ```typescript:IconAnimatedButton.tsx
+import { ReactElement, useState } from "react";
+import { Pressable, StyleSheet, View } from "react-native";
+import Animated, {
+    interpolate,
+    ReduceMotion,
+    useAnimatedStyle,
+    useDerivedValue,
+    useSharedValue,
+    withTiming,
+} from "react-native-reanimated";
+import { useAppColors } from '@/hooks/useAppColors';
+
+export interface AnimatedIconButtonProps {
+    accessibilityHint?: string;
+    accessibilityLabel?: string;
+    Icon?: ReactElement;
+    isDisabled?: boolean;
+    isLoading?: boolean;
+    onPress: () => void;
+    title: string;
+    reduceMotion?: "never" | "always" | "system";
+}
+
+const DURATION = 300;
+
+const styles = StyleSheet.create({
+    container: {
+        alignItems: "center",
+        // backgroundColor: theme.colors.primary,
+        borderRadius: 8,
+        flexDirection: "row",
+        gap: 8,
+        height: 42,
+        justifyContent: "center",
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+    },
+    title: {
+        // color: theme.colors.textInverted,
+        flexShrink: 1,
+        fontSize: 18,
+        fontWeight: "600",
+    },
+});
+
+export const IconAnimatedButton = ({
+    accessibilityHint,
+    accessibilityLabel,
+    Icon,
+    isDisabled = false,
+    isLoading = false,
+    onPress,
+    title,
+    reduceMotion = "system",
+}: AnimatedIconButtonProps) => {
+    const transition = useSharedValue(0);
+    const previousTransition = useSharedValue(0);
+    const isActive = useSharedValue(false);
+    const [containerWidth, setContainerWidth] = useState(0);
+    const [iconX, setIconX] = useState(0);
+    const colors = useAppColors();
+
+    const isIconMovingBack = useDerivedValue(() => {
+        const value = transition.value < previousTransition.value ? 1 : 0;
+        previousTransition.value = transition.value;
+
+        return value;
+    });
+
+    const motion =
+		reduceMotion === "never"
+			? ReduceMotion.Never
+			: reduceMotion === "always"
+				? ReduceMotion.Always
+				: ReduceMotion.System;
+                
+    const animatedIconContainerStyle = useAnimatedStyle(() => ({
+        transform: [
+            {
+                translateX: interpolate(
+                    transition.value,
+                    [0, 1],
+                    [0, containerWidth / 2 - iconX]
+                ),
+            },
+            { scaleX: isIconMovingBack.value ? -1 : 1 },
+        ],
+    }));
+
+    const animatedTitleStyle = useAnimatedStyle(() => ({
+        opacity: interpolate(transition.value, [0, 1], [1, 0]),
+    }));
+
+    return (
+        <Pressable
+            accessibilityHint={accessibilityHint}
+            accessibilityLabel={accessibilityLabel}
+            accessibilityRole="button"
+            accessibilityState={{
+                busy: isLoading,
+                disabled: isDisabled || isLoading,
+            }}
+            disabled={isDisabled || isLoading}
+            
+            onPress={onPress}
+            onPressIn={() => {
+                isActive.value = true;
+                transition.value = withTiming(1, { duration: DURATION }, () => {
+                    if (!isActive.value) {
+                        transition.value = withTiming(0, {
+                            duration: DURATION,
+                            reduceMotion: motion,
+                        });
+                    }
+                });
+            }}
+            onPressOut={() => {
+                if (transition.value === 1) {
+                    transition.value = withTiming(0, { duration: DURATION,
+                        reduceMotion: motion,
+                     });
+                }
+                isActive.value = false;
+            }}
+        >
+            <View
+                onLayout={({ nativeEvent }) =>
+                    setContainerWidth(nativeEvent.layout.width)
+                }
+                style={[
+                    styles.container,
+                    {
+                        opacity: isDisabled ? 0.5 : 1,
+                        backgroundColor: colors.PrimaryNormal,
+                    },
+                ]}
+            >
+                <Animated.View
+                    onLayout={({ nativeEvent }) =>
+                        setIconX(nativeEvent.layout.x)
+                    }
+                    style={animatedIconContainerStyle}
+                >
+                    {Icon}
+                </Animated.View>
+                <Animated.Text
+                    numberOfLines={1}
+                    style={[styles.title, animatedTitleStyle, { color: colors.Neutral700 }]}
+                >
+                    {title}
+                </Animated.Text>
+            </View>
+        </Pressable>
+    );
+};
+```
+
+## Usage
+
+
+  ```typescript:App.tsx
+import React, { useState } from 'react';
+import { View, StyleSheet, Alert } from 'react-native';
+import { IconAnimatedButton } from "@/components/ui/Buttons/IconAnimatedButton";
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+
+export default function App() {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleLoadingPress = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 2500); 
+  };
+
+  return (
+      <IconAnimatedButton
+        title="Pay Now"
+        onPress={handleLoadingPress}
+        isLoading={isLoading}
+        Icon={<MaterialIcons name="payment" size={24} color="black" />}
+      />
+  );}
+  ```
+
+## Props
+| Prop                 | Type                           | Default    | Required | Description                                          |
+| -------------------- | ------------------------------ | ---------- | -------- | ---------------------------------------------------- |
+| `title`              | `string`                       |            | Yes      | Text label displayed on the button.                  |
+| `onPress`            | `() => void`                   |            | Yes      | Function called when the button is pressed.          |
+| `Icon`               | `ReactElement`                 |            | No       | Optional icon element displayed left of the title.   |
+| `isDisabled`         | `boolean`                      | `false`    | No       | Disables button interaction and styles it.           |
+| `isLoading`          | `boolean`                      | `false`    | No       | Shows loading indicator instead of title/icon.       |
+| `reduceMotion`       | `'never' \| 'always' \| 'system'` | `'system'` | No       | Controls if animation respects system motion settings. |
+| `accessibilityHint`  | `string`                       |            | No       | Accessibility hint for screen readers.               |
+| `accessibilityLabel` | `string`                       |            | No       | Main accessibility label for the button.             |

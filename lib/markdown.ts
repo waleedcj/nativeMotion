@@ -21,6 +21,7 @@ import Image from "@/components/markdown/image";
 import Link from "@/components/markdown/link";
 import Outlet from "@/components/markdown/outlet";
 import Files from "@/components/markdown/files";
+import { DemoLinkButton } from "@/components/markdown/DemoLinkButton";
 import {
   Table,
   TableBody,
@@ -50,7 +51,8 @@ const components = {
   tr: TableRow,
   tbody: TableBody,
   t: TableCell,
-  MyIcons
+  MyIcons,
+  DemoLinkButton
 };
 
 // can be used for other pages like blogs, Guides etc
@@ -81,6 +83,7 @@ async function parseMdx<Frontmatter>(rawMdx: string) {
 export type BaseMdxFrontmatter = {
   title: string;
   description: string;
+  tags?: string[];
 };
 
 export async function getCompiledDocsForSlug(slug: string) {

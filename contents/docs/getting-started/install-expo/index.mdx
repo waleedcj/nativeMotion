@@ -1,0 +1,80 @@
+---
+title: Create Expo App
+description: Initialize your Expo app using popular package managers. A template with TypeScript and file navigation will be installed. Visit the official docs to customize further.
+tags: [expo, react-native, cli]
+---
+
+<Tabs defaultValue="npm" className="pt-5 pb-1">
+  <TabsList>
+    <TabsTrigger value="npm">npm</TabsTrigger>
+    <TabsTrigger value="yarn">yarn</TabsTrigger>
+  </TabsList>
+  <TabsContent value="npm">
+  <Stepper>
+  <StepperItem title="Step 1: Create a new project">
+    ```plaintext
+    npx create-expo-app@latest
+    ```
+  </StepperItem>
+
+  <StepperItem title="Step 2: You'll be prompted to name your project">
+    After cloning, navigate into the project directory to start setting up.
+
+    ```plaintext
+    What is your app named? > my-app
+    ```
+
+  </StepperItem>
+
+  <StepperItem title="Step 3: Start your app">
+    ```plaintext
+   cd my-app
+   npx expo start
+    ```
+  </StepperItem>
+</Stepper>
+
+  </TabsContent>
+  <TabsContent value="yarn">
+ <Stepper>
+  <StepperItem title="Step 1: Create a new project">
+    ```plaintext
+    yarn create expo-app
+    ```
+  </StepperItem>
+
+  <StepperItem title="Step 2: You'll be prompted to name your project">
+    After cloning, navigate into the project directory to start setting up.
+
+  ```plaintext
+What is your app named? > my-app
+````
+  </StepperItem>
+
+  <StepperItem title="Step 3: Follow these steps if you are uisng yarn 2+">
+  Add to .yarnrc.yml
+
+    ```plaintext
+nodeLinker: node-modules
+````
+
+Add to package.json.
+
+      ```JSON
+    {
+        "scripts": {
+        "eas-build-pre-install": "corepack enable && yarn set version 4"
+    }}
+     ```
+
+  </StepperItem>
+
+  <StepperItem title="Step 4: Start your app">
+    ```plaintext
+   cd my-app
+   npx expo start
+    ```
+  </StepperItem>
+</Stepper>
+  </TabsContent>
+</Tabs>

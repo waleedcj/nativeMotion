@@ -8,7 +8,7 @@ import { Children, PropsWithChildren } from "react";
 export function Stepper({ children, className }: PropsWithChildren<{ className?: string }>) {
   return (
     <div className={cn("relative space-y-6", className)}>
-      <div className="absolute left-3 top-0 bottom-0 w-[1.5px] bg-border" />
+      <div className="absolute left-3 top-0 bottom-0 w-[1.5px] bg-neutral-200" />
       {children}
     </div>
   );

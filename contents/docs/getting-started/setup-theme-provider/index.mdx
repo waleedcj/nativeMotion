@@ -1,0 +1,159 @@
+---
+title: Setup Theme Provider
+description: Implement light/dark mode theming in your Expo app using React Navigation. This guide covers configuring the ThemeProvider with your custom color palette.
+tags: [theme, colors, react-native, react-navigation, dark-mode]
+---
+
+  <Stepper>
+    <StepperItem title="Step 1: Install Dependencies">
+  You need the core React Navigation package and its peer dependencies if you haven't already installed them.
+
+    ```plaintext
+   npx expo install @react-navigation/native react-native-screens react-native-safe-area-context
+    ```
+  </StepperItem>
+  <StepperItem title="Step 2: Define Your Color Palette">
+  First, ensure you have a file (e.g., `constants/Colors.ts`) defining your color variables for both `light` and `dark` themes.:
+
+    ```typescript:Colors.ts
+    export const Colors = {
+        light: {
+            // Brand Colors
+            PrimaryNormal: "#E3A547",
+            // ... other light theme colors
+            Neutral900: "#000000",
+            bgColor: "#F2F2F2",
+            // ...
+        },
+        dark: {
+            // Brand Colors
+            PrimaryNormal: "#E3A547",
+            // ... other dark theme colors
+            Neutral900: "#FFFFFF",
+            bgColor: "#1C1C1E",
+            // ...
+         },
+};
+    ```
+  </StepperItem>
+
+  <StepperItem title="Step 3: Configure Navigation Themes">
+    Import the default themes from React Navigation and your custom colors. Merge them to create theme objects that include your palette.
+
+    ```javascript:theme.ts
+    import { DarkTheme, DefaultTheme } from "@react-navigation/native";
+    import { Colors } from "@/constants/Colors"; // Adjust path
+
+    // Merge default dark theme with your custom dark colors
+    export const CustomDarkTheme = {
+    ...DarkTheme,
+    colors: {
+        ...DarkTheme.colors,
+        ...Colors.dark,
+        },
+    };
+
+    // Merge default light theme with your custom light colors
+    export const CustomLightTheme = {
+    ...DefaultTheme,
+    colors: {
+        ...DefaultTheme.colors,
+        ...Colors.light,
+        },
+    };
+    ```
+  </StepperItem>
+
+  <StepperItem title="Step 4: Apply the ThemeProvider">
+
+    Wrap your root navigator or the entire app layout with the `ThemeProvider` component. Use the `useColorScheme` hook (from React Native or your own implementation) to dynamically select the correct theme object.
+
+    ```javascript:_layout.tsx
+    import { ThemeProvider } from "@react-navigation/native";
+    import { useColorScheme } from "react-native"; // Or your custom hook
+    import { CustomDarkTheme, CustomLightTheme } from "./path/to/your/themes"; // Adjust path
+
+    export default function RootLayout() {
+    const colorScheme = useColorScheme();
+    // ... other setup
+
+    return (
+        <ThemeProvider
+        value={colorScheme === "dark" ? CustomDarkTheme : CustomLightTheme}
+        >
+        {/* Your App's Navigation Stack or Main Component */}
+            <Stack>
+            {/* ... screens */}
+            </Stack>
+        </ThemeProvider>
+        );
+    }
+    ```
+  </StepperItem>
+
+    <StepperItem title="Step 5: Apply the ThemeProvider">
+
+   Import and use the useTheme hook from `@react-navigation/native` within your components to access the currently active theme's colors.
+
+
+    ```javascript
+    import { useTheme } from '@react-navigation/native';
+    import { Text, View } from 'react-native';
+
+    function MyComponent() {
+    const { colors } = useTheme(); // Use the hook
+
+    return (
+        <View style={{ backgroundColor: colors.bgColor }}>
+            <Text style={{ color: colors.PrimaryNormal }}>
+                Hello Themed World!
+            </Text>
+         {/* Access any color defined in your Colors.ts */}
+            <Text style={{ color: colors.Neutral700 }}>
+                Some neutral text.
+            </Text>
+        </View>
+    );
+    }
+    ```
+  </StepperItem>
+
+   <StepperItem title="Step 6:Enhance Type Safety (Optional)">
+
+   For better autocompletion and type checking on your custom color keys, create a `theme.d.ts` declaration file and augment the `@react-navigation/native` module.
+
+
+    ```javascript:theme.d.ts
+    import { Theme } from '@react-navigation/native';
+    // Adjust path to your Colors definition if necessary
+    // It doesn't need the actual values, just the keys for type checking
+    import { Colors } from "@/constants/Colors";
+
+    // Get the type of keys from one of the themes (light/dark)
+    // Assuming both have the same keys
+    type CustomColorKeys = keyof typeof Colors.light;
+
+    // Create a mapped type for the colors record
+    // Ensures all keys from your Colors object are typed as string
+    type CustomColors = {
+    [key in CustomColorKeys]: typeof Colors.light[key] extends string[] ? string[] : string;
+    }
+
+    // Define extended theme type
+    interface ExtendedTheme extends Theme {
+    colors: Theme['colors'] & CustomColors;
+    }
+
+    // Augment the module
+    declare module '@react-navigation/native' {
+    export function useTheme(): ExtendedTheme;
+    // You can also augment DefaultTheme and DarkTheme if needed
+    // export const DefaultTheme: ExtendedTheme;
+    // export const DarkTheme: ExtendedTheme;
+    }
+    ```
+  </StepperItem>
+
+
+</Stepper>
+

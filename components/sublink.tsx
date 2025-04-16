@@ -19,7 +19,7 @@ export default function SubLink({
     // Level 0 items are treated as section headings
     if (level === 0) {
       return (
-        <h4 className="font-semibold text-foreground mb-2 text-sm uppercase tracking-wider mt-4 first:mt-0">
+        <h4 className="font-semibold text-foreground mb-2 text-sm uppercase tracking-wider mt-4 first:mt-6">
           {title}
           {tag && (
             <span className="ml-2 dark:bg-blue-700 bg-yellow-300 rounded-md px-1.5 py-0.5 text-xs text-white !font-normal">

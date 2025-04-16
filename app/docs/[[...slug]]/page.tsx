@@ -24,12 +24,24 @@ export default async function DocsPage(props: PageProps) {
         <div className="w-full mx-auto">
           <DocsBreadcrumb paths={slug} />
           <Typography>
-            <h1 className="text-3xl md:text-4xl font-bold mb-4 text-neutral-900 font-jakartata">
+            <h1 className="text-3xl md:text-4xl font-bold  text-neutral-900 font-jakartata">
               {res.frontmatter.title}
             </h1>
             <p className="text-lg text-neutral-500">
               {res.frontmatter.description}
             </p>
+            {res.frontmatter?.tags && res.frontmatter.tags?.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {res.frontmatter.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="px-2.5 py-1 items-center rounded-lg text-xs font-medium bg-gray-100 text-gray-500 "
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
             <div>{res.content}</div>
             <Pagination pathname={pathName} />
           </Typography>

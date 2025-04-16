@@ -1,19 +1,19 @@
 ---
 title: Gradient Button
-description: React Native button featuring a static linear gradient background. Shows a subtle overlay on press and supports loading/disabled states.
+description:  Button featuring a static linear gradient background. Shows a subtle overlay on press and supports loading/disabled states.
+tags: [reanimated, button, gradient, linear-gradient]
 ---
 
-## Usage
 
-You can directly use the following syntax to create a code block with line numbers and highlight specific lines:
+<DemoLinkButton href="https://example.com/ghost-demo"  size="lg" variant="default">
+	Live Demo
+  <MyIcons.ScreenShareIcon className="h-4 w-4" />
+</DemoLinkButton>
 
-<Tabs defaultValue="code" className="pt-5 pb-1">
-  <TabsList>
-    <TabsTrigger value="code"><MyIcons.SourceCodeIcon className="h-4 w-4" />Code</TabsTrigger>
-    <TabsTrigger value="preview"><MyIcons.ScreenShareIcon className="h-4 w-4" />Preview</TabsTrigger>
-  </TabsList>
-  <TabsContent value="code">
-    ```javascript
+## Installation
+
+
+  ```typescript:GradientButton.tsx
 import { LinearGradient } from "expo-linear-gradient";
 import { ReactElement } from "react"; // Removed useState, useEffect
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
@@ -73,7 +73,6 @@ export const GradientButton = ({
     isLoading = false,
     onPress,
     title,
-    // reduceMotion prop is received but not used internally anymore
 }: AnimatedGradientBackgroundButtonProps) => {
     const colors = useAppColors();
 
@@ -106,7 +105,6 @@ export const GradientButton = ({
                         start={{ x: 0, y: 1 }}
                         style={styles.linearGradient} // Use simplified style
                     />
-                    {/* Content View positioned absolutely on top */}
                     <View
                         style={[
                             styles.contentContainer,
@@ -134,26 +132,44 @@ export const GradientButton = ({
 };
 ```
 
- </TabsContent>
-  <TabsContent value="preview">
-    ```typescript
-    // helloWorld.ts
-    function helloWorld(): void {
-        console.log("Hello, World!");
-    }
-    helloWorld();
-    ```
-  </TabsContent>
-</Tabs> 
+  
 
-### Props
+## Usage
 
-| Prop                 | Type           | Default | Required | Description                                    |
-| -------------------- | -------------- | ------- | -------- | ---------------------------------------------- |
-| `title`              | `string`       |         | Yes      | Text label displayed on the button.            |
-| `onPress`            | `() => void`   |         | Yes      | Function called when pressed.                  |
-| `Icon`               | `ReactElement` |         | No       | Optional icon element shown left of the title. |
-| `isDisabled`         | `boolean`      | `false` | No       | Disables interaction and reduces opacity.      |
-| `isLoading`          | `boolean`      | `false` | No       | Shows loading indicator instead of content.    |
-| `accessibilityHint`  | `string`       |         | No       | Accessibility hint for screen readers.         |
-| `accessibilityLabel` | `string`       |         | No       | Primary accessibility label.                   |
+
+  ```typescript:App.tsx
+import React, { useState } from 'react';
+import { View, StyleSheet, Alert } from 'react-native';
+import { GradientButton } from "@/components/ui/Buttons/GradientButton";
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+
+export default function App() {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleLoadingPress = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 2500); 
+  };
+
+  return (
+      <GradientButton
+        title="Pay Now"
+        onPress={handleLoadingPress}
+        isLoading={isLoading}
+        Icon={<MaterialIcons name="payment" size={24} color="black" />}
+      />
+  );}
+  ```
+
+## Props
+| Prop                 | Type                           | Default    | Required | Description                                          |
+| -------------------- | ------------------------------ | ---------- | -------- | ---------------------------------------------------- |
+| `title`              | `string`                       |            | Yes      | Text label displayed on the button.                  |
+| `onPress`            | `() => void`                   |            | Yes      | Function called when the button is pressed.          |
+| `Icon`               | `ReactElement`                 |            | No       | Optional icon element displayed left of the title.   |
+| `isDisabled`         | `boolean`                      | `false`    | No       | Disables button interaction and styles it.           |
+| `isLoading`          | `boolean`                      | `false`    | No       | Shows loading indicator instead of title/icon.       |
+| `accessibilityHint`  | `string`                       |            | No       | Accessibility hint for screen readers.               |
+| `accessibilityLabel` | `string`                       |            | No       | Main accessibility label for the button.             |

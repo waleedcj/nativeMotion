@@ -61,7 +61,7 @@ const TableRow = React.forwardRef<
   <tr
     ref={ref}
     className={cn(
-      "border-b border-muted",
+      "border-b border-neutral-200",
       className
     )}
     style={{marginInline: 16}}

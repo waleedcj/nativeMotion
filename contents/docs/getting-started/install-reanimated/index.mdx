@@ -1,0 +1,75 @@
+---
+title: Install React Native Reanimated
+description: React Native Reanimated comes pre-installed with Expo SDK 52+. For older versions or custom projects, follow the installation guide below.
+tags: [expo, react-native, reanimated]
+---
+
+<Tabs defaultValue="npm" className="pt-5 pb-1">
+  <TabsList>
+    <TabsTrigger value="npm">npm</TabsTrigger>
+    <TabsTrigger value="yarn">yarn</TabsTrigger>
+  </TabsList>
+  <TabsContent value="npm">
+  <Stepper>
+  <StepperItem title="Step 1: Install Reanimated">
+    ```plaintext
+    npx expo install react-native-reanimated
+    ```
+  </StepperItem>
+
+  <StepperItem title="Step 2: Configure babel.config.js (if not using default Expo config)">
+    Only add this if you're customizing the babel configuration:
+
+    ```javascript
+    module.exports = {
+        presets: [
+        ... // don't add it here :)
+        ],
+        plugins: [
+        ...
+        'react-native-reanimated/plugin',
+        ],
+  };
+    ```
+  </StepperItem>
+
+  <StepperItem title="Step 3: Clear Metro bundler cache">
+    ```plaintext
+  npx expo start -c
+    ```
+  </StepperItem>
+</Stepper>
+
+  </TabsContent>
+  <TabsContent value="yarn">
+ <Stepper>
+  <StepperItem title="Step 1: Install Reanimated">
+    ```plaintext
+   yarn add react-native-reanimated
+    ```
+  </StepperItem>
+
+  <StepperItem title="Step 2: Configure babel.config.js (if not using default Expo config)">
+    Only add this if you're customizing the babel configuration:
+
+    ```javascript
+    module.exports = {
+        presets: [
+        ... // don't add it here :)
+        ],
+        plugins: [
+        ...
+        'react-native-reanimated/plugin',
+        ],
+  };
+    ```
+  </StepperItem>
+
+  <StepperItem title="Step 3: Clear Metro bundler cache">
+    ```plaintext
+  yarn expo start -c
+    ```
+  </StepperItem>
+</Stepper>
+  </TabsContent>
+</Tabs>

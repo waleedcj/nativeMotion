@@ -1,0 +1,261 @@
+---
+title: Step Animated Button
+description: React Native button that vertically scrolls through predefined steps (title/icon) based on a `currentStep` prop. Background animates on press. Uses Reanimated.
+tags: [reanimated, button, animation, react-native, step, appear-in]
+---
+
+
+<DemoLinkButton href="https://example.com/ghost-demo"  size="lg" variant="default">
+	Live Demo
+  <MyIcons.ScreenShareIcon className="h-4 w-4" />
+</DemoLinkButton>
+
+## Installation
+
+
+  ```typescript:StepAnimatedButton.tsx
+import { ReactElement, useEffect } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, {
+    cancelAnimation,
+    interpolate,
+    interpolateColor,
+    ReduceMotion,
+    useAnimatedStyle,
+    useSharedValue,
+    withTiming,
+} from "react-native-reanimated";
+import { useAppColors } from '@/hooks/useAppColors';
+
+export interface AnimatedScrollingButtonProps {
+    accessibilityHint?: string;
+    accessibilityLabel?: string;
+    currentStep: number;
+    isDisabled?: boolean;
+    isLoading?: boolean;
+    onPress: () => void;
+    steps: {
+        Icon?: ReactElement;
+        title: string;
+    }[];
+    reduceMotion?: "never" | "always" | "system";
+}
+
+const BACKGROUND_TRANSITION_DURATION = 300;
+const HEIGHT = 42;
+const SCROLL_TRANSITION_DURATION = 300;
+
+const styles = StyleSheet.create({
+    container: {
+        borderRadius: 8,
+        height: HEIGHT,
+        overflow: "hidden",
+    },
+    stepContainer: {
+        alignItems: "center",
+        flexDirection: "row",
+        gap: 8,
+        height: HEIGHT,
+        justifyContent: "center",
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+    },
+    title: {
+        flexShrink: 1,
+        fontSize: 18,
+        fontWeight: "600",
+    },
+});
+
+export const StepAnimatedButton = ({
+    accessibilityHint,
+    accessibilityLabel,
+    currentStep,
+    isDisabled = false,
+    isLoading = false,
+    onPress,
+    steps,
+    reduceMotion = "system",
+}: AnimatedScrollingButtonProps) => {
+    const scrollTransition = useSharedValue(0);
+    const backgroundTransition = useSharedValue(0);
+    const isActive = useSharedValue(false);
+    const colors = useAppColors();
+
+    useEffect(() => {
+        scrollTransition.value = withTiming(currentStep, {
+            duration: SCROLL_TRANSITION_DURATION,
+        });
+
+        return () => {
+            cancelAnimation(scrollTransition);
+        };
+    }, [currentStep]);
+
+    const motion =
+		reduceMotion === "never"
+			? ReduceMotion.Never
+			: reduceMotion === "always"
+				? ReduceMotion.Always
+				: ReduceMotion.System;
+
+    const animatedScrollingContainerStyle = useAnimatedStyle(() => ({
+        backgroundColor: interpolateColor(
+            backgroundTransition.value,
+            [0, 1],
+            [colors.PrimaryNormal, colors.PrimaryLightBackground]
+        ),
+        transform: [
+            {
+                translateY: interpolate(
+                    scrollTransition.value,
+                    [0, steps.length - 1],
+                    [-HEIGHT * (steps.length - 1), 0]
+                ),
+            },
+        ],
+    }));
+
+    return (
+        <Pressable
+            accessibilityHint={accessibilityHint}
+            accessibilityLabel={accessibilityLabel}
+            accessibilityRole="button"
+            accessibilityState={{
+                busy: isLoading || currentStep > 0,
+                disabled: isDisabled || isLoading,
+            }}
+            disabled={isDisabled || isLoading || currentStep > 0}
+            
+            onPress={onPress}
+            onPressIn={() => {
+                isActive.value = true;
+                backgroundTransition.value = withTiming(
+                    1,
+                    { duration: BACKGROUND_TRANSITION_DURATION },
+                    () => {
+                        if (!isActive.value) {
+                            backgroundTransition.value = withTiming(0, {
+                                duration: BACKGROUND_TRANSITION_DURATION,
+                                reduceMotion: motion
+                            });
+                        }
+                    }
+                );
+            }}
+            onPressOut={() => {
+                if (backgroundTransition.value === 1) {
+                    backgroundTransition.value = withTiming(0, {
+                        duration: BACKGROUND_TRANSITION_DURATION,
+                        reduceMotion: motion
+                    });
+                }
+                isActive.value = false;
+            }}
+        >
+            <View
+                style={[
+                    styles.container,
+                    {
+                        opacity: isDisabled ? 0.5 : 1,
+                        backgroundColor: colors.PrimaryNormal
+                    },
+                ]}
+            >
+                <Animated.View style={animatedScrollingContainerStyle}>
+                    {steps.reverse().map((step) => (
+                        <View key={step.title} style={styles.stepContainer}>
+                            {step.Icon}
+                            <Text numberOfLines={1} style={[styles.title, { color: colors.Neutral700 }]}>
+                                {step.title}
+                            </Text>
+                        </View>
+                    ))}
+                </Animated.View>
+            </View>
+        </Pressable>
+    );
+};
+```
+
+  
+
+## Usage
+
+
+  ```typescript:App.tsx
+import React, { useState } from 'react';
+import { View, StyleSheet, Alert } from 'react-native';
+import { StepAnimatedButton } from "@/components/ui/Buttons/StepAnimatedButton";
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { useAppColors } from '@/hooks/useAppColors';
+
+export default function App() {
+    const colors = useAppColors();
+    const [currentStep, setCurrentStep] = useState(0);
+
+ 	const download = () => {
+		setCurrentStep(1);
+		setTimeout(() => {
+			setCurrentStep(2);
+		}, 2000);
+		setTimeout(() => {
+			setCurrentStep(0);
+		}, 4000);
+	};
+
+  return (
+     <StepAnimatedButton
+        currentStep={currentStep}
+        onPress={download}
+        steps={[
+            {
+                Icon: (
+                    <MaterialCommunityIcons
+                        accessible={false}
+                        color={colors.Neutral700}
+                        name="payment"
+                        size={18}
+                    />
+                ),
+                title: "Download",
+            },
+            {
+                Icon: (
+                    <MaterialCommunityIcons
+                        accessible={false}
+                        color={colors.Neutral700}
+                        name="progress-clock"
+                        size={18}
+                    />
+                ),
+                title: "Downloading...",
+            },
+            {
+                Icon: (
+                    <MaterialCommunityIcons
+                        accessible={false}
+                        color={colors.Neutral700}
+                        name="progress-check"
+                        size={18}
+                    />
+                ),
+                title: "Downloaded",
+            },
+        ]}
+        reduceMotion="system"
+    />
+  );}
+  ```
+
+## Props
+| Prop                 | Type                                        | Default    | Required | Description                                                              |
+| -------------------- | ------------------------------------------- | ---------- | -------- | ------------------------------------------------------------------------ |
+| `steps`              | `{ Icon?: ReactElement; title: string; }[]` |            | Yes      | Array of step objects, defining content for each stage.                  |
+| `currentStep`        | `number`                                    |            | Yes      | Index controlling which step content is currently displayed.             |
+| `onPress`            | `() => void`                                |            | Yes      | Function called when pressed (only effective when currentStep is 0).     |
+| `isDisabled`         | `boolean`                                   | `false`    | No       | Disables interaction and reduces opacity.                                |
+| `isLoading`          | `boolean`                                   | `false`    | No       | Disables interaction and sets accessibility busy state.                  |
+| `reduceMotion`       | `'never' \| 'always' \| 'system'`           | `'system'` | No       | Controls background animation release respecting system settings.        |
+| `accessibilityHint`  | `string`                                    |            | No       | Accessibility hint for screen readers.                                   |
+| `accessibilityLabel` | `string`                                    |            | No       | Primary accessibility label.                                             |
