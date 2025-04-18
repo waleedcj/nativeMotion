@@ -45,6 +45,7 @@ export const ROUTES: EachRoute[] = [
       {title: "Step Animation Button", href: "/step-button"},
       {title: "Smooth Button", href: "/smooth-button"},
       {title: "Gradient Button", href: "/gradient-button"},
+      {title: "Floating Label TextInput", href: "/floating-text-input"},
     ],
   },
 ];
