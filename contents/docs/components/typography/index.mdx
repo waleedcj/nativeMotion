@@ -1,0 +1,133 @@
+---
+title: Typography
+description: Renders text with predefined font sizes and weights for consistent typography.
+tags: [react-native, text, typography, styling, ui-component, font]
+---
+
+
+<DemoLinkButton href="https://example.com/ghost-demo"  size="lg" variant="default">
+	Live Demo
+  <MyIcons.ScreenShareIcon className="h-4 w-4" />
+</DemoLinkButton>
+
+## Installation
+
+  ```typescript:Typography.tsx
+import React from 'react';
+import { Text, StyleSheet, StyleProp, TextStyle } from 'react-native';
+
+// Define mappings for size and weight
+const sizeMap = {
+  'sm': 14,
+  'base': 16,
+  'lg': 18,
+  'xl': 20,
+  '2xl': 24,
+  '3xl': 32,
+  '4xl': 36,
+};
+
+const weightMap = {
+  'regular': 'font-regular',
+  'medium': 'font-medium',
+};
+
+type TypographyProps = {
+  children: React.ReactNode;
+  size?: keyof typeof sizeMap;
+  weight?: keyof typeof weightMap;
+  style?: StyleProp<TextStyle>;
+} & React.ComponentProps<typeof Text>; // Inherit other Text props
+
+export default function Typography({
+  children,
+  size = 'base',
+  weight = 'regular',
+  style,
+  ...props
+}: TypographyProps) {
+
+  const textStyle: TextStyle = {
+    fontSize: sizeMap[size],
+    fontFamily: weightMap[weight],
+  };
+
+  return (
+    <Text style={[styles.base, textStyle, style]} {...props}>
+      {children}
+    </Text>
+  );
+}
+
+// Optional base styles if needed
+const styles = StyleSheet.create({
+  base: {
+    // Add any base styles that should apply to all text, e.g., color
+    // color: 'black',
+  },
+});
+```
+
+## Usage
+
+
+  ```typescript:App.tsx
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
+import Typography from './Typography'; // Adjust the import path as needed
+
+const App = () => {
+  return (
+    <View style={styles.container}>
+      {/* Default size ('base') and weight ('regular') */}
+      <Typography>This is default text.</Typography>
+
+      {/* Custom size */}
+      <Typography size="lg">This is large text.</Typography>
+
+      {/* Custom weight */}
+      <Typography weight="medium">This is medium weight text.</Typography>
+
+      {/* Custom size and weight */}
+      <Typography size="xl" weight="medium">
+        This is extra large, medium weight text.
+      </Typography>
+
+      {/* With additional custom styles */}
+      <Typography size="sm" style={styles.customColor}>
+        This is small text with a custom color.
+      </Typography>
+
+       {/* Using other Text props like numberOfLines */}
+       <Typography size="base" numberOfLines={1} ellipsizeMode="tail">
+        This is a very long line of text that will be truncated because we passed a standard Text prop through.
+      </Typography>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  customColor: {
+    color: 'blue',
+    marginTop: 10, // Example of adding other styles
+  },
+});
+
+export default App;
+  ```
+
+## Props
+
+| Prop     | Type                                                     | Default     | Required | Description                                                                              |
+| :------- | :------------------------------------------------------- | :---------- | :------- | :--------------------------------------------------------------------------------------- |
+| `children` | `React.ReactNode`                                        |             | Yes      | The content (text, nested components) to render inside the `Text` component.           |
+| `size`   | `'sm' \| 'base' \| 'lg' \| 'xl' \| '2xl' \| '3xl' \| '4xl'` | `'base'`    | No       | Specifies the predefined font size to apply from the internal `sizeMap`.               |
+| `weight` | `'regular' \| 'medium'`                                  | `'regular'` | No       | Specifies the predefined font weight/family to apply from the internal `weightMap`.    |
+| `style`  | `StyleProp<TextStyle>`                                   |             | No       | Custom text styles to merge with or override the styles derived from `size` and `weight`. |
+| `...props`| `TextProps`                                             |             | Varies   | Inherits all other props supported by the standard React Native `Text` component.     |

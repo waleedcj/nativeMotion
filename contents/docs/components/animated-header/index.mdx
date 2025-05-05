@@ -1,0 +1,570 @@
+---
+title: Animated Header
+description: A header component that smoothly animates into and out of view based on scroll direction.
+tags: [react-native, reanimated, header, animation, ui-component, scroll, flash-list, safe-area]
+---
+ <Tabs defaultValue="flashlist" className="pt-5 pb-1">
+      <TabsList>
+        <TabsTrigger value="flashlist">FlashList</TabsTrigger>
+        <TabsTrigger value="scrollview">ScrollView</TabsTrigger>
+      </TabsList>
+      <TabsContent value="flashlist">
+      <Stepper>
+      <StepperItem title="Step 1: Install @shopify/flash-list">
+    ```plaintext
+    npx expo install @shopify/flash-list
+    ```
+  </StepperItem>
+  <StepperItem title="Step 2: Create the Header Component">
+    Create a new file (e.g., `src/components/Header.tsx`) and copy the following code:
+
+    ```typescript:Header.tsx
+    import React from "react";
+import { View, Text, StyleSheet, Image } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { TouchableOpacity } from "react-native-gesture-handler";
+import Animated, {
+	Extrapolation,
+	interpolate,
+	SharedValue,
+	useAnimatedStyle,
+} from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useAppColors } from "@/hooks/useAppColors";
+
+export const HEADER_HEIGHT = 60;
+
+type HeaderProps = {
+	headerShown: SharedValue<number>;
+};
+
+export function Header({ headerShown }: HeaderProps) {
+	const  colors  = useAppColors();
+	const insets = useSafeAreaInsets();
+
+	const headerAnimatedStyle = useAnimatedStyle(() => {
+		return {
+			transform: [
+				{
+					translateY: interpolate(
+						headerShown.value,
+						[0, 1],
+						[-HEADER_HEIGHT, 0],
+						Extrapolation.CLAMP
+					),
+				},
+			],
+		};
+	});
+
+	const contentAnimatedStyle = useAnimatedStyle(() => {
+		return {
+			opacity: interpolate(
+				headerShown.value,
+				[0, 1],
+				[0, 1],
+				Extrapolation.CLAMP
+			),
+		};
+	});
+
+	return (
+		<Animated.View
+			style={[
+				styles.header,
+				headerAnimatedStyle,
+				{ top: insets.top, backgroundColor: colors.Neutral50 },
+			]}
+		>
+			<Animated.View style={[styles.headerContainer, contentAnimatedStyle]}>
+				{/* Left Side: Profile Image and Username */}
+				<View style={styles.profileSection}>
+					<Image
+						source={{ uri: "https://picsum.photos/100" }}
+						style={styles.profileImage}
+					/>
+					<View style={styles.textContainer}>
+						<Text style={[styles.usernameText, { color: colors.Neutral500 }]}>
+							{"Guest"}
+						</Text>
+					</View>
+				</View>
+
+				{/* Right Side: Icons */}
+				<View style={styles.iconContainer}>
+					<TouchableOpacity onPress={() => {}} style={styles.iconButton}>
+						<Ionicons
+							name="search-outline"
+							size={24}
+							color={colors.Neutral500}
+						/>
+					</TouchableOpacity>
+
+					<TouchableOpacity
+						onPress={() => {
+							// Handle language change
+						}}
+						style={styles.iconButton}
+					>
+						<Ionicons
+							name="notifications-outline"
+							size={24}
+							color={colors.Neutral500}
+						/>
+					</TouchableOpacity>
+					{/* <LoadingSpinnerSVG color={colors.Neutral500} /> */}
+				</View>
+			</Animated.View>
+		</Animated.View>
+	);
+}
+
+const styles = StyleSheet.create({
+	header: {
+		position: "absolute",
+		top: 0,
+		left: 0,
+		right: 0,
+		zIndex: 1,
+		shadowRadius: 3,
+	},
+	headerContainer: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		paddingVertical: 10,
+		paddingHorizontal: 16,
+		zIndex: 10,
+		width: "100%",
+		height: HEADER_HEIGHT,
+	},
+	profileSection: {
+		flexDirection: "row",
+		alignItems: "center",
+	},
+	profileImage: {
+		width: 40,
+		height: 40,
+		borderRadius: 20,
+		marginRight: 8,
+	},
+	textContainer: {
+		alignItems: "flex-start",
+	},
+	usernameText: {
+		fontSize: 16,
+		fontWeight: "600",
+	},
+	buyerText: {
+		fontSize: 12,
+		fontWeight: "400",
+	},
+	iconContainer: {
+		flexDirection: "row",
+	},
+	iconButton: {
+		marginLeft: 16,
+	},
+});
+    ```
+  </StepperItem>
+
+  <StepperItem title="Step 3: Usage with Scroll Logic">
+    Create a screen component (e.g., `src/screens/DemoScreen.tsx`) where you'll use the `Header` and implement the scroll animation logic.
+
+        ```typescript:DemoScreen.tsx
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
+import Animated, {
+	useSharedValue,
+	useAnimatedScrollHandler,
+	withSpring,
+} from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Header, HEADER_HEIGHT } from "./Header";
+import { FlashList, FlashListProps } from "@shopify/flash-list";
+import { useAppColors } from "@/hooks/useAppColors";
+
+// Default data to scroll through
+const defaultData = Array.from({ length: 100 }, (_, i) => `Item ${i + 1}`);
+
+// Main Component with ScrollView and Animated Header
+export default function AnimatedHeaderDemo() {
+	const scrollY = useSharedValue(0);
+	const lastScrollY = useSharedValue(0);
+	const headerShown = useSharedValue(1);
+	const  colors  = useAppColors();
+	const AnimatedFlashList =
+		Animated.createAnimatedComponent<FlashListProps<any>>(FlashList);
+
+	const scrollHandler = useAnimatedScrollHandler({
+		onScroll: (event) => {
+			const currentScrollY = event.contentOffset.y;
+
+			// Only process scroll if we're not in the bounce area (y >= 0)
+			if (currentScrollY >= 0) {
+				const dy = currentScrollY - lastScrollY.value;
+
+				// Detect if we're actively scrolling or if it's bounce movement
+				if (Math.abs(dy) > 0.5) {
+					// Using a smaller divisor for more responsive movement
+					const newValue = headerShown.value + -dy / 50;
+
+					// Clamp the value with better boundary handling
+					headerShown.value = withSpring(Math.min(Math.max(newValue, 0), 1), {
+						damping: 15,
+						stiffness: 200,
+					});
+				}
+			}
+
+			lastScrollY.value = currentScrollY;
+			scrollY.value = currentScrollY;
+		},
+	});
+
+	const renderItem = ({ item }: { item: string }) => (
+		<View style={[styles.item, {borderBottomColor: colors.Neutral500}]}>
+			<Text style={[styles.text, { color: colors.Neutral700 }]}>{item}</Text>
+		</View>
+	);
+
+	return (
+		<SafeAreaView
+			style={[styles.container, { backgroundColor: colors.Neutral50 }]}
+		>
+			<Header headerShown={headerShown} />
+			<View style={styles.scrollView}>
+				<AnimatedFlashList
+					contentContainerStyle={{ paddingTop: HEADER_HEIGHT }}
+					data={defaultData}
+					showsVerticalScrollIndicator={false}
+					onScroll={scrollHandler}
+					estimatedItemSize={50}
+					renderItem={renderItem}
+					scrollEventThrottle={16}
+				/>
+			</View>
+		</SafeAreaView>
+	);
+}
+
+// Styles
+const styles = StyleSheet.create({
+	container: {
+		    flex: 1,
+	},
+	header: {
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1,
+            shadowRadius: 3,
+            elevation: 4,
+	},
+	scrollView: {
+		    flex: 1,
+	},
+	contentContainer: {
+            paddingTop: 50,
+            paddingBottom: 50,
+	},
+	item: {
+            padding: 20,
+            borderBottomWidth: 1,
+	},
+	text: {
+            fontSize: 16,
+            fontWeight: "400",
+	},
+});
+        ```
+  </StepperItem>
+</Stepper>
+
+
+      </TabsContent>
+      <TabsContent value="scrollview">
+      <Stepper>
+        <StepperItem title="Step 1: Create the Header Component">
+    Create a new file (e.g., `src/components/Header.tsx`) and copy the following code:
+
+    ```typescript:Header.tsx
+    import React from "react";
+import { View, Text, StyleSheet, Image } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { TouchableOpacity } from "react-native-gesture-handler";
+import Animated, {
+	Extrapolation,
+	interpolate,
+	SharedValue,
+	useAnimatedStyle,
+} from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useAppColors } from "@/hooks/useAppColors";
+
+export const HEADER_HEIGHT = 60;
+
+type HeaderProps = {
+	headerShown: SharedValue<number>;
+};
+
+export function Header({ headerShown }: HeaderProps) {
+	const  colors  = useAppColors();
+	const insets = useSafeAreaInsets();
+
+	const headerAnimatedStyle = useAnimatedStyle(() => {
+		return {
+			transform: [
+				{
+					translateY: interpolate(
+						headerShown.value,
+						[0, 1],
+						[-HEADER_HEIGHT, 0],
+						Extrapolation.CLAMP
+					),
+				},
+			],
+		};
+	});
+
+	const contentAnimatedStyle = useAnimatedStyle(() => {
+		return {
+			opacity: interpolate(
+				headerShown.value,
+				[0, 1],
+				[0, 1],
+				Extrapolation.CLAMP
+			),
+		};
+	});
+
+	return (
+		<Animated.View
+			style={[
+				styles.header,
+				headerAnimatedStyle,
+				{ top: insets.top, backgroundColor: colors.Neutral50 },
+			]}
+		>
+			<Animated.View style={[styles.headerContainer, contentAnimatedStyle]}>
+				{/* Left Side: Profile Image and Username */}
+				<View style={styles.profileSection}>
+					<Image
+						source={{ uri: "https://picsum.photos/100" }}
+						style={styles.profileImage}
+					/>
+					<View style={styles.textContainer}>
+						<Text style={[styles.usernameText, { color: colors.Neutral500 }]}>
+							{"Guest"}
+						</Text>
+					</View>
+				</View>
+
+				{/* Right Side: Icons */}
+				<View style={styles.iconContainer}>
+					<TouchableOpacity onPress={() => {}} style={styles.iconButton}>
+						<Ionicons
+							name="search-outline"
+							size={24}
+							color={colors.Neutral500}
+						/>
+					</TouchableOpacity>
+
+					<TouchableOpacity
+						onPress={() => {
+							// Handle language change
+						}}
+						style={styles.iconButton}
+					>
+						<Ionicons
+							name="notifications-outline"
+							size={24}
+							color={colors.Neutral500}
+						/>
+					</TouchableOpacity>
+					{/* <LoadingSpinnerSVG color={colors.Neutral500} /> */}
+				</View>
+			</Animated.View>
+		</Animated.View>
+	);
+}
+
+const styles = StyleSheet.create({
+	header: {
+		position: "absolute",
+		top: 0,
+		left: 0,
+		right: 0,
+		zIndex: 1,
+		shadowRadius: 3,
+	},
+	headerContainer: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		paddingVertical: 10,
+		paddingHorizontal: 16,
+		zIndex: 10,
+		width: "100%",
+		height: HEADER_HEIGHT,
+	},
+	profileSection: {
+		flexDirection: "row",
+		alignItems: "center",
+	},
+	profileImage: {
+		width: 40,
+		height: 40,
+		borderRadius: 20,
+		marginRight: 8,
+	},
+	textContainer: {
+		alignItems: "flex-start",
+	},
+	usernameText: {
+		fontSize: 16,
+		fontWeight: "600",
+	},
+	buyerText: {
+		fontSize: 12,
+		fontWeight: "400",
+	},
+	iconContainer: {
+		flexDirection: "row",
+	},
+	iconButton: {
+		marginLeft: 16,
+	},
+});
+    ```
+  </StepperItem>
+
+  <StepperItem title="Step 2: Usage with Scroll Logic">
+    Create a screen component (e.g., `src/screens/DemoScreen.tsx`) where you'll use the `Header` and implement the scroll animation logic.
+
+        ```typescript:DemoScreen.tsx
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
+import Animated, {
+	useSharedValue,
+	useAnimatedScrollHandler,
+	withSpring,
+} from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Header } from "./Header";
+import { useAppColors } from "@/hooks/useAppColors";
+
+// Default data to scroll through
+const defaultData = Array.from({ length: 100 }, (_, i) => `Item ${i + 1}`);
+
+// Main Component with ScrollView and Animated Header
+export default function AnimatedHeaderDemo() {
+	const scrollY = useSharedValue(0);
+	const lastScrollY = useSharedValue(0);
+	const headerShown = useSharedValue(1);
+	const colors = useAppColors();
+
+	const scrollHandler = useAnimatedScrollHandler({
+		onScroll: (event) => {
+			const currentScrollY = event.contentOffset.y;
+
+			// Only process scroll if we're not in the bounce area (y >= 0)
+			if (currentScrollY >= 0) {
+				const dy = currentScrollY - lastScrollY.value;
+
+				// Detect if we're actively scrolling or if it's bounce movement
+				if (Math.abs(dy) > 0.5) {
+					// Using a smaller divisor for more responsive movement
+					const newValue = headerShown.value + -dy / 50;
+
+					// Clamp the value with better boundary handling
+					headerShown.value = withSpring(Math.min(Math.max(newValue, 0), 1), {
+						damping: 15,
+						stiffness: 200,
+					});
+				}
+			}
+
+			lastScrollY.value = currentScrollY;
+			scrollY.value = currentScrollY;
+		},
+	});
+
+	return (
+		<SafeAreaView
+			style={[styles.container, { backgroundColor: colors.Neutral50 }]}
+		>
+			<Header headerShown={headerShown} />
+			<Animated.ScrollView
+				style={styles.scrollView}
+				contentContainerStyle={[styles.contentContainer]}
+				showsVerticalScrollIndicator={false}
+				onScroll={scrollHandler}
+				// bounces={false}
+				scrollEventThrottle={16}
+			>
+				{defaultData.map((item, index) => (
+					<View key={index} style={styles.item}>
+						<Text style={[styles.text, { color: colors.Neutral700 }]}>
+							{item}
+						</Text>
+					</View>
+				))}
+			</Animated.ScrollView>
+		</SafeAreaView>
+	);
+}
+
+// Styles
+const styles = StyleSheet.create({
+	container: {
+		flex: 1,
+	},
+	header: {
+		position: "absolute",
+		top: 0,
+		left: 0,
+		right: 0,
+		justifyContent: "center",
+		alignItems: "center",
+		zIndex: 1,
+		shadowRadius: 3,
+		elevation: 4,
+	},
+	scrollView: {
+		flex: 1,
+	},
+	contentContainer: {
+		paddingTop: 50,
+		paddingBottom: 50,
+	},
+	item: {
+		padding: 20,
+		borderBottomWidth: 1,
+	},
+	text: {
+		fontSize: 16,
+		fontWeight: "400",
+	},
+});
+        ```
+    </StepperItem>
+    </Stepper>
+      </TabsContent>
+    </Tabs>
+
+
+## Props
+
+| Prop          | Type                 | Default | Required | Description                                                                   |
+| :------------ | :------------------- | :------ | :------- | :---------------------------------------------------------------------------- |
+| `headerShown` | `SharedValue<number>` |         | Yes      | A Reanimated SharedValue ranging from 0 (hidden) to 1 (shown) to control visibility. |
+
+## Customization
+
+*   **Animation:** Tweak the `withSpring` configuration (damping, stiffness) in the `scrollHandler` for different animation feels. You could also use `withTiming` for a duration-based animation. Modify the interpolation ranges or extrapolation in `Header.tsx` for different visual effects.
+*   **Scroll Logic:** Adjust the thresholds (`dy > 5`, `dy < -5`) in the `scrollHandler` to change sensitivity to scroll direction changes.

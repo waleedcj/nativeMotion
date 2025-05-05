@@ -34,7 +34,7 @@ export default function Home() {
 						</p>
 						<div className="flex gap-4">
 							{/* Using Link correctly with a standard button */}
-							<Link href="/components" passHref legacyBehavior>
+							<Link href="/docs/getting-started/install-expo" passHref legacyBehavior>
 								<a
 									className="inline-block bg-gray-800 px-8 py-3 rounded-xl
 													shadow-md hover:shadow-xl

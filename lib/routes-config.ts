@@ -37,6 +37,7 @@ export const ROUTES: EachRoute[] = [
     href: "/components",
     noLink: true,
     items: [
+      {title: "Animated Header", href: "/animated-header"},
       {title: "Scale Button", href: "/scale-button"},
       {title: "3D Button", href: "/three-dimension-button"},
       {title: "Icon Button", href: "/icon-button"},
@@ -46,6 +47,9 @@ export const ROUTES: EachRoute[] = [
       {title: "Smooth Button", href: "/smooth-button"},
       {title: "Gradient Button", href: "/gradient-button"},
       {title: "Floating Label TextInput", href: "/floating-text-input"},
+      {title: "Radial Gradient Background", href: "/radial-gradient-background"},
+      {title: "Tabs", href: "/animated-tabs"},
+      {title: "Typography", href: "/typography"},
     ],
   },
 ];
