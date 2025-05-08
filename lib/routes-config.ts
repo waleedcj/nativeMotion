@@ -1,5 +1,3 @@
-// for page navigation & to sort on leftbar
-
 export type EachRoute = {
   title: string;
   href: string;
@@ -47,10 +45,22 @@ export const ROUTES: EachRoute[] = [
       {title: "Smooth Button", href: "/smooth-button"},
       {title: "Gradient Button", href: "/gradient-button"},
       {title: "Floating Label TextInput", href: "/floating-text-input"},
+      {title: "Smooth Border TextInput", href: "/smooth-border-text-input"},
       {title: "Radial Gradient Background", href: "/radial-gradient-background"},
       {title: "Tabs", href: "/animated-tabs"},
       {title: "Typography", href: "/typography"},
+      {title: "Skeleton", href: "/skeleton"},
+      {title: "Scroll Pagination Dots", href: "/scroll-pagination-dots"},
+      {title: "Swipe Slider", href: "/swipe-slider"},
     ],
+  },
+  {
+    title: "Screens",
+    href: "/screens",
+    noLink: true,
+    items: [
+      // {title: "Animated Header", href: "/animated-header"},
+    ]
   },
 ];
 

@@ -1,0 +1,375 @@
+---
+title: Scrolling Pagination Dots
+description: Displays an animated and horizontally scrolling set of pagination dots, ideal for carousels or sliders, showing a limited number of dots at a time with opacity transitions.
+tags: [react-native, pagination, dots, carousel, slider, reanimated, animation, ui-component]
+---
+
+
+<DemoLinkButton href="https://example.com/ghost-demo"  size="lg" variant="default">
+	Live Demo
+  <MyIcons.ScreenShareIcon className="h-4 w-4" />
+</DemoLinkButton>
+
+## Installation
+
+
+  ```typescript:ScrollingPaginationDots.tsx
+import React from 'react';
+import { View, StyleSheet, StyleProp, ViewStyle, Dimensions } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  interpolate,
+  Extrapolation,
+  SharedValue,
+} from 'react-native-reanimated';
+
+const { width: defaultSlideWidth } = Dimensions.get('window');
+
+//Individual Dot Component
+// Animation is driven by shared value `scrollX`.
+type DotProps = {
+  index: number;
+  scrollX: SharedValue<number>;
+  slideWidth: number;
+  dotSize: number;
+  spacing: number;
+  dotColor: string;
+  inactiveDotColor?: string;
+  inactiveDotOpacity: number;
+  dotStyle?: StyleProp<ViewStyle>;
+  maxVisibleDotsForAnimation: number;
+};
+
+const Dot: React.FC<DotProps> = React.memo(({
+  index,
+  scrollX,
+  slideWidth,
+  dotSize,
+  spacing,
+  dotColor,
+  inactiveDotColor,
+  inactiveDotOpacity,
+  dotStyle,
+  maxVisibleDotsForAnimation,
+}) => {
+  const animatedDotStyle = useAnimatedStyle(() => {
+    'worklet';
+    // Current page index based on scroll position (can be a float during scroll)
+    const currentIndexFloat = scrollX.value / slideWidth;
+
+    // Distance of this dot's index from the current effective page index
+    const distance = Math.abs(index - currentIndexFloat);
+
+    // Define the range over which dots will scale/fade.
+    // For maxVisibleDotsForAnimation = 5, FADE_RANGE will be 2.
+    // This means dots at distance 0, 1, 2 from the active dot will be in the transition.
+    const FADE_RANGE = (maxVisibleDotsForAnimation - 1) / 4;
+    // Ensure fade range is at least 0.5 to prevent division by zero or non-sensical interpolation
+    // if maxVisibleDotsForAnimation is 1.
+    const effectiveFadeRange = Math.max(0.5, FADE_RANGE);
+
+    //you can add for example scaling of the active dots aswell here
+
+    // Opacity Interpolation:
+    // - At distance 0 (active dot): 1 (fully opaque)
+    // - At distance effectiveFadeRange: inactiveDotOpacity
+    const opacity = interpolate(
+      distance,
+      [0, effectiveFadeRange],
+      [1, inactiveDotOpacity],
+      Extrapolation.CLAMP
+    );
+
+    return {
+      opacity,
+    };
+  });
+
+  return (
+    <Animated.View
+      style={[
+        styles.dotBase,
+        {
+          width: dotSize,
+          height: dotSize,
+          borderRadius: dotSize * 2,
+          marginHorizontal: spacing / 2,
+          backgroundColor: inactiveDotColor || dotColor,
+        },
+        dotStyle,
+        animatedDotStyle,
+      ]}
+    />
+  );
+});
+
+type ScrollingPaginationDotsProps = {
+  count: number;
+  scrollX: SharedValue<number>;
+  dotColor: string; // Color for the active dot (at full opacity)
+  inactiveDotColor?: string; // Base color for dots; if not provided, dotColor is used
+  dotSize?: number;
+  spacing?: number;
+  slideWidth?: number; // Width of each slide in the FlatList
+  containerStyle?: StyleProp<ViewStyle>;
+  dotStyle?: StyleProp<ViewStyle>;
+  inactiveDotOpacity?: number; // Opacity of dots at the edge of the visible window
+  maxVisibleDots?: number; // Max dots to display in the container (ideally odd)
+};
+
+const ScrollingPaginationDots: React.FC<ScrollingPaginationDotsProps> = ({
+  count,
+  scrollX,
+  dotColor,
+  inactiveDotColor,
+  dotSize = 8,
+  spacing = 8,
+  slideWidth = defaultSlideWidth,
+  containerStyle,
+  dotStyle,
+  inactiveDotOpacity = 0.3,
+  maxVisibleDots = 5,
+}) => {
+  // Ensure maxVisibleDots is odd for a visually centered active dot effect.
+  // If an even number is provided, increment to the next odd number.
+  const actualMaxVisibleDots = maxVisibleDots % 2 === 0 ? maxVisibleDots + 1 : maxVisibleDots;
+
+  // Calculate the width of the container needed to show `actualMaxVisibleDots`.
+  // This container will have `overflow: 'hidden'` to act as a viewport.
+  const numDotsInViewport = Math.min(count, actualMaxVisibleDots);
+  const viewportWidth = numDotsInViewport > 0
+    ? (numDotsInViewport * dotSize) + (numDotsInViewport > 1 ? (numDotsInViewport - 1) * spacing : 0)
+    : 0;
+
+  // This container will be translated horizontally to keep the active group of dots centered.
+  const animatedInnerContainerStyle = useAnimatedStyle(() => {
+    'worklet';
+    // If the total number of dots is less than or equal to what can be shown no translation is needed
+    if (count <= actualMaxVisibleDots) {
+      return { transform: [{ translateX: 0 }] };
+    }
+
+    const currentIndexFloat = scrollX.value / slideWidth;
+
+    // Calculate the translation needed to center the currentIndexFloat
+    const currentDotCenterOffset = (currentIndexFloat * (dotSize + spacing)) + (dotSize / 2);
+    // The X offset where we want this dot to appear in the center
+    const viewportCenter = viewportWidth / 2;
+    
+    let translateX = viewportCenter - currentDotCenterOffset;
+
+    // Clamp the translation to prevent over-scrolling the dot strip.
+    // Total width of all dots laid out:
+    const totalDotStripWidth = (count * dotSize) + ((count - 1) * spacing);
+    // Maximum positive translation (when first few dots are shown):
+    const maxTranslateX = 0; // Or slightly positive if padding is desired at the start
+    // Minimum negative translation (when last few dots are shown):
+    const minTranslateX = viewportWidth - totalDotStripWidth - dotSize;
+
+    translateX = Math.max(minTranslateX, Math.min(maxTranslateX, translateX));
+
+    return {
+      transform: [{ translateX }],
+    };
+  });
+  
+  if (count <= 0) {
+    return <></>;
+  }
+
+  const isScrollable = count > actualMaxVisibleDots;
+
+  return (
+    <View
+      style={[
+        styles.outerContainer,
+        { width: viewportWidth }, // Fixed width for the viewport
+        !isScrollable && { justifyContent: 'center' },
+        containerStyle,
+      ]}
+    >
+      <Animated.View
+        style={[
+          styles.dotsInnerContainer,
+          isScrollable ? animatedInnerContainerStyle : {}, // Apply translation if scrollable
+        ]}
+      >
+        {[...Array(count)].map((_, index) => (
+          <Dot
+            key={`dot-${index}`}
+            index={index}
+            scrollX={scrollX}
+            slideWidth={slideWidth}
+            dotSize={dotSize}
+            spacing={spacing}
+            dotColor={dotColor}
+            inactiveDotColor={inactiveDotColor}
+            inactiveDotOpacity={inactiveDotOpacity}
+            dotStyle={dotStyle}
+            maxVisibleDotsForAnimation={actualMaxVisibleDots}
+          />
+        ))}
+      </Animated.View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  outerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    overflow: 'hidden',   
+  },
+  dotsInnerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dotBase: {
+    borderRadius: 16
+    // Base styles
+  },
+});
+
+export default ScrollingPaginationDots;
+```
+
+## Usage
+
+ Sets up a horizontal `FlatList` to display a series of images, using `react-native-reanimated` to track scroll position and synchronizes it with a `ScrollingPaginationDots` component to provide visual feedback of the current image.
+
+  ```typescript:ImageCarouselPage.tsx
+import React, { useRef } from 'react';
+import {
+  View,
+  StyleSheet,
+  FlatList,
+  Image,
+  Dimensions,
+  SafeAreaView,
+} from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedScrollHandler,
+} from 'react-native-reanimated';
+import { useAppColors } from '@/hooks/useAppColors';
+import ScrollingPaginationDots from '@/components/ui/PaginationDots';
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
+// Sample Image Data (replace with your actual image URIs or local requires)
+const SAMPLE_IMAGES = [
+  { id: '1', uri: `https://picsum.photos/seed/picsum1/${Math.round(screenWidth)}/${Math.round(screenHeight * 0.5)}` },
+  { id: '2', uri: `https://picsum.photos/seed/picsum2/${Math.round(screenWidth)}/${Math.round(screenHeight * 0.5)}` },
+  { id: '3', uri: `https://picsum.photos/seed/picsum3/${Math.round(screenWidth)}/${Math.round(screenHeight * 0.5)}` },
+  { id: '4', uri: `https://picsum.photos/seed/picsum4/${Math.round(screenWidth)}/${Math.round(screenHeight * 0.5)}` },
+  { id: '5', uri: `https://picsum.photos/seed/picsum5/${Math.round(screenWidth)}/${Math.round(screenHeight * 0.5)}` },
+  { id: '6', uri: `https://picsum.photos/seed/picsum6/${Math.round(screenWidth)}/${Math.round(screenHeight * 0.5)}` },
+  { id: '7', uri: `https://picsum.photos/seed/picsum7/${Math.round(screenWidth)}/${Math.round(screenHeight * 0.5)}` },
+  { id: '8', uri: `https://picsum.photos/seed/picsum8/${Math.round(screenWidth)}/${Math.round(screenHeight * 0.5)}` },
+];
+
+type ImageItem = {
+  id: string;
+  uri: string;
+};
+export default function ImageCarouselPage() {
+  
+  const scrollX = useSharedValue(0);
+  const flatListRef = useRef<FlatList<ImageItem>>(null);
+  const colors = useAppColors();
+
+  // Reanimated scroll handler to update scrollX
+  const scrollHandler = useAnimatedScrollHandler(
+    (event) => {
+      scrollX.value = event.contentOffset.x;
+    },
+    []
+  );
+
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 50, // Item is considered visible if 50% is on screen
+  }).current;
+
+  // Render a single image slide
+  const renderImageItem = ({ item }: { item: ImageItem }) => {
+    return (
+      <View style={styles.slide}>
+        <Image source={{ uri: item.uri }} style={styles.image} resizeMode="cover" />
+      </View>
+    );
+  };
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <Animated.FlatList
+          ref={flatListRef}
+          data={SAMPLE_IMAGES}
+          renderItem={renderImageItem}
+          keyExtractor={(item) => item.id}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onScroll={scrollHandler}
+          scrollEventThrottle={16} 
+          viewabilityConfig={viewabilityConfig}
+        />
+        <View style={styles.paginationContainer}>
+          <ScrollingPaginationDots
+            count={SAMPLE_IMAGES.length}
+            scrollX={scrollX}
+            slideWidth={screenWidth} 
+            dotColor={colors.Neutral700}        
+            inactiveDotColor={colors.Neutral500}     
+            dotSize={10}
+            spacing={8}
+            inactiveDotOpacity={0.5}
+            maxVisibleDots={5} 
+          />
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
+  container: {
+    flex: 1,
+  },
+  slide: {
+    width: screenWidth, 
+    height: screenHeight * 0.5, 
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  image: {
+    width: '90%',
+    height: '90%', 
+    borderRadius: 10, 
+  },
+  paginationContainer: {
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
+  ```
+
+## Props
+
+| Prop                 | Type                   | Default                        | Required | Description                                                                                                                               |
+| :------------------- | :--------------------- | :----------------------------- | :------- | :---------------------------------------------------------------------------------------------------------------------------------------- |
+| `count`              | `number`               |                                | Yes      | Total number of dots to display, corresponding to the number of slides.                                                                   |
+| `scrollX`            | `SharedValue<number>`  |                                | Yes      | A `react-native-reanimated` shared value representing the horizontal scroll position of the associated scrollable view (e.g., FlatList). |
+| `dotColor`           | `string`               |                                | Yes      | The color of the active dot and the base color for inactive dots if `inactiveDotColor` is not provided.                               |
+| `inactiveDotColor`   | `string`               |                                | No       | The color for inactive dots. If not provided, `dotColor` is used with `inactiveDotOpacity`.                                                 |
+| `dotSize`            | `number`               | `8`                            | No       | The diameter of each pagination dot.                                                                                                      |
+| `spacing`            | `number`               | `8`                            | No       | The space between each dot.                                                                                                               |
+| `slideWidth`         | `number`               | `Dimensions.get('window').width` | No       | The width of a single slide in the scrollable view. Used to calculate the current active dot based on `scrollX`.                     |
+| `containerStyle`     | `StyleProp<ViewStyle>` |                                | No       | Custom styles for the outer `View` container that acts as the viewport for the dots.                                                      |
+| `dotStyle`           | `StyleProp<ViewStyle>` |                                | No       | Custom styles applied to each individual dot `Animated.View`. Merged with default dot styles.                                            |
+| `inactiveDotOpacity` | `number`               | `0.3`                          | No       | The opacity of dots that are further away from the currently active dot.                                                                  |
+| `maxVisibleDots`     | `number`               | `5`                            | No       | The maximum number of dots to be visible in the viewport at any time. . |

@@ -1,0 +1,439 @@
+---
+title: Swipe Slider
+description: A customizable "swipe-to-action" slider component that triggers an event upon successful swipe completion.
+tags: [react-native, slider, swipe, gesture, animation, ui-component, confirmation]
+---
+
+
+<DemoLinkButton href="https://example.com/ghost-demo"  size="lg" variant="default">
+	Live Demo
+  <MyIcons.ScreenShareIcon className="h-4 w-4" />
+</DemoLinkButton>
+
+## Installation
+
+Copy the file `SwipeSlider.tsx` into your project directory
+
+  ```typescript:SwipeSlider.tsx
+import React from "react";
+import {
+	View,
+	StyleSheet,
+	Dimensions,
+	StyleProp,
+	ViewStyle,
+	TextStyle,
+} from "react-native";
+import {
+	GestureHandlerRootView,
+	GestureDetector,
+	Gesture,
+} from "react-native-gesture-handler";
+import Animated, {
+	useSharedValue,
+	useAnimatedStyle,
+	runOnJS,
+	withTiming,
+	ReduceMotion,
+	Easing,
+	interpolateColor,
+	interpolate,
+	Extrapolation,
+} from "react-native-reanimated";
+import * as Haptics from "expo-haptics";
+
+const { width: screenWidth } = Dimensions.get("window");
+const SLIDER_TRACK_WIDTH = screenWidth * 0.8;
+const SLIDER_SIZE = 50;
+const TRACK_HEIGHT = SLIDER_SIZE + 10; //ideally you want the slider container slightly bigger than the handle
+const BORDER_RADIUS = 16; //same for both
+const TRACK_PADDING = 5;
+const HANDLE_INITIAL_LEFT = 5; // The handle moves from its initial `left` position.
+const COMPLETION_THRESHOLD_PERCENTAGE = 0.98; //if handle is moved 98% it is considered done
+
+
+type SwipeSliderProps = {
+	onSwipeComplete: () => void;
+	enableHaptics?: boolean;
+	sliderSize?: number;
+	sliderTrackWidth?: number;
+	sliderTrackHeight?: number;
+	borderRadius?: number;
+	initialTrackColor: string;
+	completeTrackColor: string;
+	sliderBackgroundColor: string;
+	textColor: string;
+	initialText: string;
+	completeText: string;
+	icon: React.ReactNode;
+	trackStyle?: StyleProp<ViewStyle>;
+	handleStyle?: StyleProp<ViewStyle>;
+	textStyle?: StyleProp<TextStyle>;
+	reduceMotion?: "never" | "always" | "system";
+};
+
+const SwipeSlider: React.FC<SwipeSliderProps> = ({
+	onSwipeComplete,
+	enableHaptics = true,
+	sliderSize = SLIDER_SIZE,
+	sliderTrackWidth = SLIDER_TRACK_WIDTH,
+	sliderTrackHeight = TRACK_HEIGHT,
+	borderRadius = BORDER_RADIUS,
+	initialTrackColor,
+	completeTrackColor,
+	sliderBackgroundColor,
+	textColor,
+	initialText,
+	completeText,
+	icon,
+	textStyle,
+	reduceMotion = "system",
+}) => {
+	const offset = useSharedValue(0);
+	const completionProgress = useSharedValue(0);
+    const MaxOffset = sliderTrackWidth - sliderSize - TRACK_PADDING - HANDLE_INITIAL_LEFT  // Calculate the maximum translation offset for the handle
+    const CompletionOffset = MaxOffset * COMPLETION_THRESHOLD_PERCENTAGE; // how much offset until complete
+
+	const motion =
+		reduceMotion === "never"
+			? ReduceMotion.Never
+			: reduceMotion === "always"
+				? ReduceMotion.Always
+				: ReduceMotion.System;
+
+	const handleHaptic = () => {
+		Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+	};
+
+	const pan = Gesture.Pan()
+		.onChange((event) => {
+			const newOffset = offset.value + event.changeX;
+			// Clamp the new offset value between 0 and MaxOffset
+			offset.value = Math.max(0, Math.min(newOffset, MaxOffset));
+		})
+		.onEnd(() => {
+			if (offset.value >= CompletionOffset) {
+				completionProgress.value = withTiming(1, {
+					duration: 350,
+					easing: Easing.in(Easing.linear),
+					reduceMotion: motion,
+				});
+				runOnJS(onSwipeComplete)();
+				enableHaptics && runOnJS(handleHaptic)();
+			} else {
+				// If not pulled far enough, snap back to the beginning
+				offset.value = withTiming(0, {
+					duration: 500,
+					easing: Easing.out(Easing.quad),
+					reduceMotion: motion,
+				});
+			}
+		});
+
+	const sliderHandleStyle = useAnimatedStyle(() => {
+		return {
+			transform: [{ translateX: offset.value }],
+		};
+	});
+
+	const sliderTrackAnimatedStyle = useAnimatedStyle(() => {
+		return {
+			backgroundColor: interpolateColor(
+				offset.value,
+				[0, MaxOffset],
+				[initialTrackColor, completeTrackColor]
+			),
+			zIndex: 1,
+		};
+	});
+
+	const slideToPayTextAnimatedStyle = useAnimatedStyle(() => {
+		return {
+			opacity: interpolate(
+				completionProgress.value,
+				[0, 0.5], // Fade out as completionProgress goes from 0 to 0.5
+				[1, 0],
+				Extrapolation.CLAMP
+			),
+		};
+	});
+
+	// Animated style for "Success!" text
+	const successTextAnimatedStyle = useAnimatedStyle(() => {
+		return {
+			opacity: interpolate(
+				completionProgress.value,
+				[0.5, 1], // Fade in as completionProgress goes from 0.5 to 1
+				[0, 1],
+				Extrapolation.CLAMP
+			),
+		};
+	});
+
+	return (
+		// GestureHandlerRootView is essential for gestures to work.
+		// Ideally, this should be at the root of your app, but for a standalone
+		// component example, it's included here.
+		<GestureHandlerRootView style={styles.container}>
+			<Animated.View
+				style={[
+					styles.sliderTrack,
+					sliderTrackAnimatedStyle,
+					{
+						width: sliderTrackWidth,
+						height: sliderTrackHeight,
+						borderRadius: borderRadius,
+					},
+				]}
+			>
+				<GestureDetector gesture={pan}>
+					<Animated.View
+						style={[
+							styles.sliderHandle,
+							sliderHandleStyle,
+							{
+								backgroundColor: sliderBackgroundColor,
+								width: sliderSize,
+								height: sliderSize,
+								borderRadius: borderRadius,
+							},
+						]}
+					>
+						{icon}
+					</Animated.View>
+				</GestureDetector>
+				<View style={styles.textContainer} pointerEvents="none">
+					<Animated.Text
+						style={[
+							styles.sliderTextBase,
+							{ color: textColor },
+							slideToPayTextAnimatedStyle,
+							textStyle,
+						]}
+					>
+						{initialText}
+					</Animated.Text>
+					<Animated.Text
+						style={[
+							styles.sliderTextBase,
+							{ color: textColor }, // Assuming success text also uses Neutral0 or specify another color
+							successTextAnimatedStyle,
+							textStyle,
+						]}
+					>
+						{completeText}
+					</Animated.Text>
+				</View>
+			</Animated.View>
+		</GestureHandlerRootView>
+	);
+};
+
+const styles = StyleSheet.create({
+	container: {
+		justifyContent: "center",
+		alignItems: "center",
+		padding: 20,
+	},
+	sliderTrack: {
+		justifyContent: "center",
+		alignItems: "center",
+		padding: TRACK_PADDING,
+	},
+	sliderHandle: {
+		position: "absolute",
+		left: HANDLE_INITIAL_LEFT,
+		alignItems: "center",
+		justifyContent: "center",
+		zIndex: 1,
+	},
+	textContainer: {
+		...StyleSheet.absoluteFillObject, // Makes this view fill its parent (sliderTrack)
+		justifyContent: "center",
+		alignItems: "center",
+		// No zIndex needed here, or zIndex: 0, to be behind the handle
+	},
+	sliderTextBase: {
+		// Base style for both texts
+		fontSize: 16,
+		fontWeight: "500",
+		position: "absolute", // Critical for texts to overlap for the cross-fade effect
+	},
+});
+
+export default SwipeSlider;
+```
+
+## Usage
+
+  ```typescript:SwipeSliderPage.tsx
+import React from 'react';
+import { ScrollView, View, StyleSheet, Alert, Text, Dimensions } from 'react-native';
+import SwipeSlider from '@/components/ui/Slider';
+import { useAppColors } from '@/hooks/useAppColors'; 
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+export default function SwipeSliderPage() {
+    const colors = useAppColors();
+    const { width: screenWidth } = Dimensions.get("window");
+    
+    const handlePaymentComplete = () => {
+        Alert.alert("Payment Slider", "Payment swipe complete! Navigating...");
+        // Example navigation after a delay
+        setTimeout(() => {
+            // router.replace('/some-payment-success-route');
+            console.log("Navigating after payment...");
+        }, 1000);
+    };
+
+    const handleActionConfirm = () => {
+        Alert.alert("Action Slider", "Action confirmed!");
+    };
+
+    const handleUnlockComplete = () => {
+        Alert.alert("Unlock Slider", "Device Unlocked!");
+    };
+
+    const handleMinimalTaskComplete = () => {
+        Alert.alert("Minimal Slider", "Task marked as done.");
+    };
+
+    return (
+        <SafeAreaView>
+        <ScrollView contentContainerStyle={styles.screenContainer}>
+            <Text style={[styles.title, { color: colors.Neutral900 }]}>Swipe Slider Examples</Text>
+
+            {/* Example 1: Payment Slider */}
+            <View style={styles.sliderSection}>
+                <Text style={[styles.sliderLabel, { color: colors.Neutral700 }]}>1. Payment Confirmation</Text>
+                <SwipeSlider
+                    onSwipeComplete={handlePaymentComplete}
+                    initialTrackColor={colors.Neutral300} // A light grey for initial state
+                    completeTrackColor={colors.SuccessfulNormal} // Green for success
+                    sliderBackgroundColor={colors.Neutral0} // White handle
+                    textColor={colors.Neutral900} // Dark text on light handle, or white text on dark track
+                    initialText="Slide to Pay $50.00"
+                    completeText="Processing..."
+                    icon={<MaterialIcons name="payment" size={24} color={colors.SuccessfulNormal} />}
+                    borderRadius={25} // More rounded
+                    sliderTrackWidth={screenWidth * 0.9}
+                    sliderSize={60}
+                    sliderTrackHeight={70}
+                    enableHaptics={true}
+                    reduceMotion='never'
+                />
+            </View>
+
+            {/* Example 2: General Action Confirmation */}
+            <View style={styles.sliderSection}>
+                <Text style={[styles.sliderLabel, { color: colors.Neutral700 }]}>2. Confirm Action</Text>
+                <SwipeSlider
+                    onSwipeComplete={handleActionConfirm}
+                    initialTrackColor={colors.PrimaryLightBackground}
+                    completeTrackColor={colors.PrimaryNormal}
+                    sliderBackgroundColor={colors.Neutral0}
+                    textColor={colors.PrimaryDisable} // Text color that contrasts with PrimaryNormal
+                    initialText="Slide to Confirm"
+                    completeText="Confirmed!"
+                    icon={<MaterialIcons name="check-circle-outline" size={22} color={colors.PrimaryDisable} />}
+                    borderRadius={12}
+                    sliderSize={50}
+                    sliderTrackWidth={screenWidth * 0.85}
+                    sliderTrackHeight={60}
+                      reduceMotion='never'
+                />
+            </View>
+
+            {/* Example 3: Unlock Slider */}
+            <View style={styles.sliderSection}>
+                <Text style={[styles.sliderLabel, { color: colors.Neutral700 }]}>3. Slide to Unlock</Text>
+                <SwipeSlider
+                    onSwipeComplete={handleUnlockComplete}
+                    initialTrackColor={colors.Neutral500}
+                    completeTrackColor={colors.SuccessfulLightBackground} // A vibrant accent color
+                    sliderBackgroundColor={colors.Neutral100} // Dark handle
+                    textColor={colors.Neutral900} // White text for dark handle/accent track
+                    initialText="Slide to Unlock"
+                    completeText="Unlocked"
+                    icon={<MaterialIcons name="lock-open" size={26} color={colors.Neutral0} />}
+                    borderRadius={50} // Fully circular handle and track ends
+                    sliderSize={55}
+                    sliderTrackWidth={screenWidth * 0.75}
+                    sliderTrackHeight={65}
+                      reduceMotion='never'
+                />
+            </View>
+
+             {/* Example 4: Minimalistic Task Completion */}
+             <View style={styles.sliderSection}>
+                <Text style={[styles.sliderLabel, { color: colors.Neutral700 }]}>4. Mark as Done (Minimal)</Text>
+                <SwipeSlider
+                    onSwipeComplete={handleMinimalTaskComplete}
+                    initialTrackColor={colors.Neutral100}
+                    completeTrackColor={colors.Neutral500}
+                    sliderBackgroundColor={colors.Neutral0}
+                    textColor={colors.Neutral900}
+                    initialText="Slide if done"
+                    completeText="Done"
+                    icon={<MaterialIcons name="done" size={20} color={colors.Neutral700} />}
+                    borderRadius={8}
+                    sliderSize={40}
+                    sliderTrackWidth={screenWidth * 0.6}
+                    sliderTrackHeight={50}
+                    textStyle={{ fontSize: 14 }} // Custom text style
+                      reduceMotion='never'
+                />
+            </View>
+        </ScrollView>
+        </SafeAreaView>
+    );
+}
+
+const styles = StyleSheet.create({
+    screenContainer: {
+        flexGrow: 1,
+        alignItems: 'center',
+        paddingVertical: 20,
+        paddingHorizontal: 10,
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 30,
+        textAlign: 'center',
+    },
+    sliderSection: {
+        marginBottom: 40,
+        width: '100%',
+        alignItems: 'center', // Center the slider component itself
+    },
+    sliderLabel: {
+        fontSize: 16,
+        fontWeight: '600',
+        marginBottom: 15,
+    },
+});
+  ```
+
+## Props
+
+| Prop                  | Type                                  | Default                      | Required | Description                                                                                  |
+| :-------------------- | :------------------------------------ | :--------------------------- | :------- | :------------------------------------------------------------------------------------------- |
+| `onSwipeComplete`     | `() => void`                          |                              | Yes      | Callback function executed when the swipe gesture is successfully completed.                 |
+| `enableHaptics`       | `boolean`                             | `true`                       | No       | If `true`, provides haptic feedback upon successful swipe completion.                      |
+| `sliderSize`          | `number`                              | `50`                         | No       | The width and height of the draggable slider handle.                                         |
+| `sliderTrackWidth`    | `number`                              | `screenWidth * 0.8`          | No       | The total width of the slider track area.                                                    |
+| `sliderTrackHeight`   | `number`                              | `60` (sliderSize + 10)       | No       | The total height of the slider track area.                                                   |
+| `borderRadius`        | `number`                              | `16`                         | No       | The border radius applied to both the slider track and the handle.                           |
+| `initialTrackColor`   | `string`                              |                              | Yes      | The background color of the slider track before interaction and during partial swipe.      |
+| `completeTrackColor`  | `string`                              |                              | Yes      | The background color of the slider track when the swipe is fully completed.                  |
+| `sliderBackgroundColor`| `string`                              |                              | Yes      | The background color of the draggable slider handle.                                         |
+| `textColor`           | `string`                              |                              | Yes      | The color of the text displayed inside the slider (both initial and complete states).        |
+| `initialText`         | `string`                              |                              | Yes      | The text displayed on the slider before the user starts swiping.                             |
+| `completeText`        | `string`                              |                              | Yes      | The text displayed on the slider after the swipe is successfully completed.                  |
+| `icon`                | `React.ReactNode`                     |                              | Yes      | A React Node (e.g., an icon component) to display inside the slider handle.                |
+| `trackStyle`          | `StyleProp<ViewStyle>`                |                              | No       | Optional custom styles to apply to the slider track container.                             |
+| `handleStyle`         | `StyleProp<ViewStyle>`                |                              | No       | Optional custom styles to apply to the draggable slider handle.                              |
+| `textStyle`           | `StyleProp<TextStyle>`                |                              | No       | Optional custom styles to apply to both the initial and complete text elements.            |
+| `reduceMotion`        | `"never" \| "always" \| "system"`   | `"system"`                   | No       | Controls animation behavior based on device accessibility settings or preference.            |

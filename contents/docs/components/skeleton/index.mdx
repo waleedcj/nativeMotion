@@ -1,0 +1,309 @@
+---
+title: Skeleton
+description: Displays an animated placeholder matching its dimensions while loading, revealing children when done.
+tags: [react-native, skeleton, loading, placeholder, animation, reanimated, ui-component]
+---
+
+
+<DemoLinkButton href="https://example.com/ghost-demo"  size="lg" variant="default">
+	Live Demo
+  <MyIcons.ScreenShareIcon className="h-4 w-4" />
+</DemoLinkButton>
+
+## Installation
+
+
+  ```typescript:Skeleton.tsx
+import React, { ReactNode, useEffect } from "react";
+import {
+	View,
+	StyleSheet,
+	StyleProp,
+	ViewStyle,
+	LayoutChangeEvent,
+} from "react-native";
+import Animated, {
+	useSharedValue,
+	useAnimatedStyle,
+	withRepeat,
+	withTiming,
+	interpolate,
+	cancelAnimation,
+	Easing,
+	ReduceMotion,
+} from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
+import { useAppColors } from "@/hooks/useAppColors";
+
+type SkeletonProps = {
+	isLoading: boolean;
+	children: ReactNode;
+	style?: StyleProp<ViewStyle>;
+	duration?: number;
+	delay?: number;
+    reduceMotion?: "always" | "never" | "system";
+}
+
+const GRADIENT_WIDTH_PERCENTAGE = 1; //how wide you want the gradient to be
+
+const Skeleton: React.FC<SkeletonProps> = ({
+	isLoading,
+	children,
+	style,
+	duration = 1000,
+    reduceMotion = 'system'
+}) => {
+	const colors = useAppColors();
+	const sharedValue = useSharedValue(0);
+	const componentWidth = useSharedValue(0);
+	const baseColor = colors.Neutral50;
+	const shimmerColor = colors.Neutral70;
+
+    const motion =
+		reduceMotion === "never"
+			? ReduceMotion.Never
+			: reduceMotion === "always"
+				? ReduceMotion.Always
+				: ReduceMotion.System;
+
+	useEffect(() => {
+		if (isLoading) {
+			// const effectiveDuration =
+			// 	duration ??
+			// 	Math.max(1000, componentWidth.value * ANIMATION_SPEED_FACTOR);
+
+			sharedValue.value = 0; // Reset before starting
+			sharedValue.value = withRepeat(
+				withTiming(1, {
+					duration: duration,
+					easing: Easing.linear,
+					reduceMotion: motion,
+				}),
+				-1,
+				false,
+				() => {},
+				motion
+			);
+		} else {
+			// Cancel animation if not loading
+			cancelAnimation(sharedValue);
+			sharedValue.value = 0;
+		}
+
+		// Cleanup
+		return () => cancelAnimation(sharedValue);
+	}, [isLoading, sharedValue]);
+
+	const animatedStyle = useAnimatedStyle(() => {
+		const gradientWidth = componentWidth.value * GRADIENT_WIDTH_PERCENTAGE;
+		const translateX = interpolate(
+			sharedValue.value,
+			[0, 1],
+			[-gradientWidth, componentWidth.value]
+		);
+
+		// Control opacity based on measurement *within the animated style*
+		const opacity = componentWidth.value > 0 ? 1 : 0;
+
+		return {
+			opacity: opacity,
+			transform: [{ translateX }],
+			width: gradientWidth,
+		};
+	});
+
+	//calculate the view layout
+	const handleLayout = (event: LayoutChangeEvent) => {
+		const width = event.nativeEvent.layout.width;
+		componentWidth.value = width;
+	};
+
+	return isLoading ? (
+		<View
+			style={[styles.container, { backgroundColor: baseColor }, style]}
+			onLayout={handleLayout} // Measure the width
+		>
+			<Animated.View
+				style={[
+					StyleSheet.absoluteFill,
+					styles.gradientContainer,
+					animatedStyle,
+				]}
+			>
+				<LinearGradient
+					colors={[baseColor, shimmerColor, baseColor]}
+					start={{ x: 0, y: 0.5 }}
+					end={{ x: 1, y: 0.5 }}
+					style={styles.gradient}
+				/>
+			</Animated.View>
+		</View>
+	) : (
+		<>{children}</>
+	);
+};
+
+const styles = StyleSheet.create({
+	container: {
+		overflow: "hidden",
+		position: "relative",
+	},
+	gradientContainer: {
+		position: "absolute",
+		top: 0,
+		bottom: 0,
+		left: 0,
+	},
+	gradient: {
+		flex: 1,
+	},
+});
+
+export default Skeleton;
+```
+
+## Usage
+
+  ```typescript:SkeletonPage.tsx
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, Button, Image } from "react-native";
+import Skeleton from "@/components/ui/Skeleton";
+import { useAppColors } from "@/hooks/useAppColors";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+const AVATAR_SIZE = 50;
+
+export default function SkeletonPage() {
+	const [isLoading, setIsLoading] = useState(true);
+	const colors = useAppColors();
+
+	useEffect(() => {
+		// Simulate data fetching only if currently loading replace with your own promise
+		if (isLoading) {
+			const timer = setTimeout(() => {
+				setIsLoading(false);
+			}, 3500);
+
+			return () => clearTimeout(timer);
+		}
+	}, [isLoading]); 
+
+	const triggerReload = () => {
+		setIsLoading(true); 
+	};
+
+	const avatarUrl = "https://picsum.photos/100";
+	const name = "Walid Memon";
+	const description = "Software Developer | React Native Enthusiast";
+
+	return (
+		<SafeAreaView  style={styles.screen}>
+			{/* Avatar Skeleton/Image */}
+            <View style={[styles.itemContainer]}>
+
+          {/* width and height of the skeleton must be specified */}
+			<Skeleton isLoading={isLoading} style={styles.skeletonAvatar} >
+				<Image source={{ uri: avatarUrl }} style={styles.actualAvatar} />
+			</Skeleton>
+
+			{/* Text Lines Container */}
+			<View style={styles.textContainer}>
+				{/* Name Skeleton/Text */}
+				<Skeleton isLoading={isLoading} style={styles.skeletonLineLong} reduceMotion="never">
+					<Text
+						style={[
+							styles.nameText,
+							{ color: colors.Neutral900 },
+						]}
+						numberOfLines={1}
+					>
+						{name}
+					</Text>
+				</Skeleton>
+
+				{/* Description Skeleton/Text */}
+				<Skeleton isLoading={isLoading} style={styles.skeletonLineShort} reduceMotion="never">
+					<Text
+						style={[
+							styles.descriptionText,
+							{ color: colors.Neutral500 },
+						]}
+						numberOfLines={1}
+					>
+						{description}
+					</Text>
+				</Skeleton>
+			</View>
+            </View>
+            <Button
+                title={'Reload Animation'}
+                onPress={triggerReload}
+                disabled={isLoading}
+                color={colors.PrimaryNormal}
+            />
+		</SafeAreaView>
+	);
+}
+
+
+const styles = StyleSheet.create({
+    screen: {
+        flex: 1,
+        paddingTop: 50,
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+	itemContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+		paddingVertical: 12,
+		paddingHorizontal: 16,
+	},
+	skeletonAvatar: {
+		width: AVATAR_SIZE,
+		height: AVATAR_SIZE,
+		borderRadius: AVATAR_SIZE / 2,
+		marginRight: 12,
+	},
+	textContainer: {
+		flex: 1, 
+		justifyContent: "center",
+	},
+	skeletonLineLong: {
+		height: 18, 
+		width: "95%", 
+		borderRadius: 4,
+		marginBottom: 8, 
+	},
+	skeletonLineShort: {
+		height: 14,
+		width: "75%", // Shorter line
+		borderRadius: 4,
+	},
+	actualAvatar: {
+		width: AVATAR_SIZE,
+		height: AVATAR_SIZE,
+		borderRadius: AVATAR_SIZE / 2,
+	},
+	nameText: {
+		fontSize: 16,
+		fontWeight: "600",
+		lineHeight: 18, 
+		marginBottom: 8, 
+	},
+	descriptionText: {
+		fontSize: 12,
+		lineHeight: 14,
+	},
+});
+  ```
+
+## Props
+
+| Prop         | Type                                | Default    | Required | Description                                                                                                |
+| :----------- | :---------------------------------- | :--------- | :------- | :--------------------------------------------------------------------------------------------------------- |
+| `isLoading`  | `boolean`                           |            | Yes      | Controls whether the skeleton placeholder or the actual `children` are rendered.                           |
+| `children`   | `ReactNode`                         |            | Yes      | The actual content to display once `isLoading` becomes `false`.                                            |
+| `style`      | `StyleProp<ViewStyle>`              |            | Yes       | Custom styles applied to the skeleton placeholder `View`. Crucial for setting width, height, borderRadius, etc. |
+| `duration`   | `number`                            | `1000`     | No       | The duration (in milliseconds) for one cycle of the shimmer animation.                                   |
+| `reduceMotion`| `'always' \| 'never' \| 'system'` | `'system'` | No       | Controls if/when animations are disabled (`'always'`, `'never'`, or based on device accessibility settings). |
