@@ -149,6 +149,7 @@ import {
 	View,
 	StyleSheet,
 	Alert,
+    Text
 } from "react-native";
 import { useAppColors } from "@/hooks/useAppColors";
 import OTPInput from "@/components/ui/OtpInput";
@@ -202,17 +203,26 @@ export default function OtpPage() {
 	const handleVerification = async (codes: string) => {
 		console.log("Verifying code...", codes);
 
-		// setProgress(1);
+		// you can add a api call here this is just a mock even activity indicators with a resend button
 		if (dummyCode == codes) {
 			Alert.alert("Verification Complete, Navigating");
+            resetCode();
 		} else {
 			setErrorMessages(["Invalid OTP. Please try again."]);
 		}
 	};
 
+    const resetCode = () => {
+        setCodes(Array(6).fill(""));
+        setErrorMessages(null);
+        refs[0]!.current?.focus();
+      };
+
 	return (
 		<SafeAreaView style={styles.screenContainer}>
-			<TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+				<Text style={{ color: colors.Neutral700, marginBottom: 16 }}>
+					Enter OTP: {dummyCode}
+				</Text>
 				<View
 					onTouchStart={() => {
 						inputRef.current?.focus();
@@ -236,7 +246,6 @@ export default function OtpPage() {
 						containerStyle={{ marginBottom: 20 }} // Style for the row of inputs
 					/>
 				</View>
-			</TouchableWithoutFeedback>
 		</SafeAreaView>
 	);
 }
