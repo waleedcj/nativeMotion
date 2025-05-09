@@ -45,6 +45,7 @@ export const ROUTES: EachRoute[] = [
       {title: "Smooth Button", href: "/smooth-button"},
       {title: "Gradient Button", href: "/gradient-button"},
       {title: "Floating Label TextInput", href: "/floating-text-input"},
+      {title: "OTP Input", href: "/otp-input"},
       {title: "Smooth Border TextInput", href: "/smooth-border-text-input"},
       {title: "Radial Gradient Background", href: "/radial-gradient-background"},
       {title: "Tabs", href: "/animated-tabs"},
@@ -52,6 +53,7 @@ export const ROUTES: EachRoute[] = [
       {title: "Skeleton", href: "/skeleton"},
       {title: "Scroll Pagination Dots", href: "/scroll-pagination-dots"},
       {title: "Swipe Slider", href: "/swipe-slider"},
+      {title: "Circular Progress", href: "/animated-progress-circle"},
     ],
   },
   {

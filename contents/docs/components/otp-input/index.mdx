@@ -1,0 +1,271 @@
+---
+title: OTP Input
+description: A customizable component for entering One-Time Passwords (OTP) with individual input fields, auto-focus shifting, and error handling.
+tags: [react-native, otp, input, verification, form, security, ui-component]
+---
+
+
+<DemoLinkButton href="https://example.com/ghost-demo"  size="lg" variant="default">
+	Live Demo
+  <MyIcons.ScreenShareIcon className="h-4 w-4" />
+</DemoLinkButton>
+
+## Installation
+
+  ```typescript:OTPInput.tsx
+import React from "react";
+import { useState, type RefObject } from "react";
+import {
+	TextInput,
+	View,
+	StyleSheet,
+	Text,
+	StyleProp,
+	ViewStyle,
+	TextInputProps,
+} from "react-native";
+
+//you can change it from here or from the TextInputProps using style prop
+const INPUT_SIZE = 48;
+const INPUT_BORDER_RADIUS = 8;
+
+type OTPInputProps = {
+	codes: string[];
+	refs: Array<RefObject<TextInput | null>>;
+	errorMessages: string[] | null;
+	onChangeCode: (text: string, index: number) => void;
+	gap: number;
+	inputBackgroundColor: string;
+	inputTextColor: string;
+	inputFocusedBorderColor: string;
+	inputErrorBorderColor: string;
+	inputErrorTextColor: string;
+	containerStyle: StyleProp<ViewStyle>;
+};
+
+export default function OTPInput(
+	props: React.JSX.IntrinsicAttributes &
+		React.JSX.IntrinsicClassAttributes<TextInput> &
+		Readonly<TextInputProps> &
+		OTPInputProps
+) {
+	const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
+
+	const handleFocus = (index: number) => setFocusedIndex(index);
+	const handleBlur = () => setFocusedIndex(null);
+
+	return (
+		<View
+			style={styles.container}
+		>
+			<View
+				style={[
+					styles.inputContainer,
+					props?.containerStyle,
+					{ gap: props?.gap },
+				]}
+			>
+				{props?.codes.map((code, index) => (
+					<TextInput
+						key={index}
+						autoComplete="one-time-code"
+						enterKeyHint="done"
+						style={[
+							styles.input,
+							props?.errorMessages && {
+								borderColor: props.inputErrorBorderColor,
+								color: props?.inputErrorTextColor,
+							},
+							focusedIndex === index && {
+								borderColor: props.inputFocusedBorderColor,
+							},
+							{
+								backgroundColor: props?.inputBackgroundColor,
+								color: props?.inputTextColor,
+							},
+						]}
+						inputMode="numeric"
+						onChangeText={(text) => props.onChangeCode(text, index)}
+						value={code}
+						onFocus={() => handleFocus(index)}
+						onBlur={handleBlur}
+						maxLength={index === 0 ? 6 : 1}
+						ref={props.refs[index]}
+						onKeyPress={({ nativeEvent: { key } }) => {
+							if (key === "Backspace" && index > 0) {
+								props.onChangeCode("", index - 1);
+								props.refs[index - 1]!.current!.focus();
+							}
+						}}
+						{...props}
+					/>
+				))}
+			</View>
+			{props.errorMessages && (
+				<Text style={{ color: props?.inputErrorTextColor }}>
+					{props.errorMessages[0]}
+				</Text>
+			)}
+		</View>
+	);
+}
+
+const styles = StyleSheet.create({
+	container: {
+		display: "flex",
+		alignItems: "center",
+		flexDirection: "column",
+	},
+	inputContainer: {
+		flexDirection: "row",
+		width: "100%",
+	},
+	input: {
+		fontSize: 20,
+		fontWeight: "500",
+		height: INPUT_SIZE,
+		width: INPUT_SIZE,
+		borderRadius: INPUT_BORDER_RADIUS,
+		textAlign: "center",
+		borderWidth: 1,
+	},
+});
+```
+
+  
+
+## Usage
+
+The example OtpPage manages the OTP state using `useState` for codes an array of 6 empty strings initially and errorMessages. It creates an array of refs using useRef for each input. The onChangeCode function updates the codes state, handles auto-pasting, moves focus to the next input using `refs[index + 1]?.current?.focus()`, and triggers verification when all 6 digits are entered. All these states and functions are passed as props to the `<OTPInput />` component.
+
+
+  ```typescript:OtpPage.tsx
+import React, { RefObject, useRef, useState } from "react";
+import {
+	Keyboard,
+	SafeAreaView,
+	TextInput,
+	TouchableWithoutFeedback,
+	View,
+	StyleSheet,
+	Alert,
+} from "react-native";
+import { useAppColors } from "@/hooks/useAppColors";
+import OTPInput from "@/components/ui/OtpInput";
+
+export default function OtpPage() {
+	const colors = useAppColors();
+	//states
+	const dummyCode = "123456";
+	const inputRef = useRef<TextInput>(null);
+	const [codes, setCodes] = useState<string[] | null>(Array(6).fill(""));
+	const refs: Array<RefObject<TextInput | null>> = [
+		useRef<TextInput>(null),
+		useRef<TextInput>(null),
+		useRef<TextInput>(null),
+		useRef<TextInput>(null),
+		useRef<TextInput>(null),
+		useRef<TextInput>(null),
+	];
+	const [errorMessages, setErrorMessages] = useState<string[] | null>(null);
+
+	//functions
+	const onChangeCode = (text: string, index: number) => {
+		setErrorMessages(null);
+		let newCodes: string[] = [];
+
+		if (text.length > 1) {
+			// Handle auto-fill scenario
+			newCodes = text.trim().split("").slice(0, 6); // Ensure only 6 digits
+			setCodes(newCodes);
+
+			// Move focus to the last input
+			refs[5]?.current?.focus();
+		} else {
+			// Handle manual input
+			newCodes = [...(codes || [])];
+			newCodes[index] = text;
+			setCodes(newCodes);
+
+			// Move focus to the next input if not the last one
+			if (text !== "" && index < 5) {
+				refs[index + 1]?.current?.focus();
+			}
+		}
+
+		// Check if the OTP is complete and trigger verification
+		if (newCodes.join("").length === 6) {
+			handleVerification(newCodes.join(""));
+		}
+	};
+
+	const handleVerification = async (codes: string) => {
+		console.log("Verifying code...", codes);
+
+		// setProgress(1);
+		if (dummyCode == codes) {
+			Alert.alert("Verification Complete, Navigating");
+		} else {
+			setErrorMessages(["Invalid OTP. Please try again."]);
+		}
+	};
+
+	return (
+		<SafeAreaView style={styles.screenContainer}>
+			<TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+				<View
+					onTouchStart={() => {
+						inputRef.current?.focus();
+					}}
+					style={{
+						flexDirection: "row",
+						gap: 8,
+					}}
+				>
+					<OTPInput
+						codes={codes!}
+						errorMessages={errorMessages}
+						onChangeCode={onChangeCode}
+						refs={refs}
+						gap={8}
+						inputBackgroundColor={colors.Neutral100}
+						inputTextColor={colors.Neutral900}
+						inputFocusedBorderColor={colors.PrimaryNormal}
+						inputErrorBorderColor={colors.ErrorNormal}
+						inputErrorTextColor={colors.ErrorNormal}
+						containerStyle={{ marginBottom: 20 }} // Style for the row of inputs
+					/>
+				</View>
+			</TouchableWithoutFeedback>
+		</SafeAreaView>
+	);
+}
+
+const styles = StyleSheet.create({
+	screenContainer: {
+		flex: 1,
+		alignItems: "center",
+		justifyContent: "center",
+		padding: 20,
+	},
+});
+  ```
+
+
+
+## Props
+
+| Prop                      | Type                                       | Default | Required | Description                                                                                                                               |
+| :------------------------ | :----------------------------------------- | :------ | :------- | :---------------------------------------------------------------------------------------------------------------------------------------- |
+| `codes`                   | `string[]`                                 |         | Yes      | An array of strings, where each string represents the value of an individual OTP input box.                                               |
+| `refs`                    | `Array<RefObject<TextInput \| null>>`      |         | Yes      | An array of React refs, one for each `TextInput` element, used for programmatically managing focus.                                         |
+| `errorMessages`           | `string[] \| null`                         | `null`  | No       | An array of error messages to display below the inputs. If `null` or empty, no error is shown. Only the first message is currently displayed. |
+| `onChangeCode`            | `(text: string, index: number) => void`    |         | Yes      | Callback function triggered when the text in an input box changes. Receives the new text and the index of the input.                    |
+| `gap`                     | `number`                                   |         | Yes      | The numerical value for the space (gap) between individual OTP input boxes.                                                               |
+| `inputBackgroundColor`    | `string`                                   |         | Yes      | The background color for each OTP input box.                                                                                                |
+| `inputTextColor`          | `string`                                   |         | Yes      | The text color for the content within each OTP input box.                                                                                   |
+| `inputFocusedBorderColor` | `string`                                   |         | Yes      | The border color for an OTP input box when it is focused.                                                                                   |
+| `inputErrorBorderColor`   | `string`                                   |         | Yes      | The border color for OTP input boxes when `errorMessages` is present.                                                                       |
+| `inputErrorTextColor`     | `string`                                   |         | Yes      | The text color for OTP input boxes and the error message text when `errorMessages` is present.                                              |
+| `containerStyle`          | `StyleProp<ViewStyle>`                     |         | No       | Custom styles to apply to the `View` that wraps all the individual OTP input boxes.                                                         |
+| `...props`                | `TextInputProps`                           |         | Varies   | Inherits all other props supported by the standard React Native `TextInput` component, applied to each individual input box.                |

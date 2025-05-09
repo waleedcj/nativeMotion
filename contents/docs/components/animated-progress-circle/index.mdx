@@ -1,0 +1,239 @@
+---
+title: Animated Progress Circle
+description: Renders an animated circular SVG progress indicator with customizable appearance and optional centered content.
+tags: [react-native, progress, circle, svg, animation, reanimated]
+---
+
+
+<DemoLinkButton href="https://example.com/ghost-demo"  size="lg" variant="default">
+	Live Demo
+  <MyIcons.ScreenShareIcon className="h-4 w-4" />
+</DemoLinkButton>
+
+## Installation
+
+  ```typescript:ProgressCircle.tsx
+import React, { useEffect } from "react";
+import { StyleSheet, View, ViewStyle, StyleProp } from "react-native";
+import Animated, {
+	useSharedValue,
+	withTiming,
+	useAnimatedProps,
+	Easing,
+	ReduceMotion, 
+} from "react-native-reanimated";
+import Svg, { Circle } from "react-native-svg";
+
+const DEFAULT_SIZE = 100;
+const DEFAULT_STROKE_WIDTH = 8; 
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
+type ProgressCircleProps = {
+	progress: number; // Value between 0 and 1
+	progressColor: string;
+	trackColor: string;
+	size?: number;
+	strokeWidth?: number;
+	animationDuration?: number;
+	children?: React.ReactNode;
+	containerStyle?: StyleProp<ViewStyle>;
+	reduceMotion?: "never" | "always" | "system";
+};
+
+export default function ProgressCircle({
+	progress,
+	progressColor,
+	trackColor,
+	size = DEFAULT_SIZE,
+	strokeWidth = DEFAULT_STROKE_WIDTH,
+	animationDuration = 1000,
+	children,
+	containerStyle,
+	reduceMotion = "system",
+}: ProgressCircleProps) {
+	// Recalculate radius and circumference based on current size and strokeWidth
+	const actualRadius = (size - strokeWidth) / 2;
+	const actualCircumference = 2 * Math.PI * actualRadius;
+
+	const progressValue = useSharedValue(0);
+	const motion =
+		reduceMotion === "never"
+			? ReduceMotion.Never
+			: reduceMotion === "always"
+				? ReduceMotion.Always
+				: ReduceMotion.System;
+
+	useEffect(() => {
+		// Ensure progress is clamped between 0 and 1
+		const clampedProgress = Math.max(0, Math.min(1, progress));
+		progressValue.value = withTiming(clampedProgress, {
+			duration: animationDuration,
+			easing: Easing.out(Easing.quad), 
+            reduceMotion: motion
+		});
+	}, [progress, animationDuration, progressValue]); 
+
+	const animatedProps = useAnimatedProps(() => ({
+		strokeDashoffset: actualCircumference * (1 - progressValue.value),
+	}));
+
+	return (
+		<View
+			style={[styles.container, { width: size, height: size }, containerStyle]}
+		>
+			<Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+				{/* Background Track Circle */}
+				<Circle
+					cx={size / 2}
+					cy={size / 2}
+					r={actualRadius}
+					stroke={trackColor}
+					fill="none"
+					strokeWidth={strokeWidth}
+					// Rotate by -90 degrees to start from the top
+					transform={`rotate(-90 ${size / 2} ${size / 2})`}
+				/>
+				<AnimatedCircle
+					cx={size / 2}
+					cy={size / 2}
+					r={actualRadius}
+					fill="none"
+					stroke={progressColor}
+					strokeWidth={strokeWidth}
+					strokeDasharray={actualCircumference}
+					animatedProps={animatedProps}
+					strokeLinecap="round"
+					transform={`rotate(-90 ${size / 2} ${size / 2})`}
+				/>
+			</Svg>
+			{/* Children are absolutely positioned in the center */}
+			{children && (
+				<View style={[styles.childrenContainer, { width: size, height: size }]}>
+					{children}
+				</View>
+			)}
+		</View>
+	);
+}
+
+const styles = StyleSheet.create({
+	container: {
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	childrenContainer: {
+		position: "absolute",
+		alignItems: "center",
+		justifyContent: "center",
+	},
+});
+```
+
+  
+
+## Usage
+
+  ```typescript:ProgressCirclePage.tsx
+
+import React, { useState } from 'react';
+import { View, Text, Button, StyleSheet, SafeAreaView } from 'react-native';
+import ProgressCircle from '@/components/ui/ProgressCircle';
+import { useAppColors } from '@/hooks/useAppColors'; 
+
+const PROGRESS_STEP = 0.1; // Increment/decrement by 10%
+
+export default function ProgressCirclePage() {
+  const colors = useAppColors();
+  const [progress, setProgress] = useState(0.25); // Initial progress
+
+  const incrementProgress = () => {
+    setProgress((prevProgress) => Math.min(1, prevProgress + PROGRESS_STEP));
+  };
+
+  const decrementProgress = () => {
+    setProgress((prevProgress) => Math.max(0, prevProgress - PROGRESS_STEP));
+  };
+
+  const resetProgress = () => {
+    setProgress(0);
+  };
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.screenContainer}>
+        <Text style={[styles.title, {color: colors.Neutral900}]}>Animated Circle Progress</Text>
+
+        <ProgressCircle
+          progress={progress} // Value between 0 and 1
+          progressColor={colors.PrimaryNormal}
+          trackColor={colors.PrimaryLightBackground} 
+          size={150}
+          strokeWidth={3}
+          animationDuration={1000}
+          reduceMotion='never'
+        >
+          {/* Optional: Display progress text inside the circle */}
+          <Text style={[styles.progressText, {color: colors.Neutral900}]}>
+            {`${Math.round(progress * 100)}%`}
+          </Text>
+        </ProgressCircle>
+
+        <View style={styles.controlsContainer}>
+          <Button title="Increase (+10%)" onPress={incrementProgress} disabled={progress >= 1} />
+          <View style={styles.spacer} />
+          <Button title="Decrease (-10%)" onPress={decrementProgress} disabled={progress <= 0} />
+          <View style={styles.spacer} />
+          <Button title="Reset" onPress={resetProgress} />
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
+  screenContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 30,
+  },
+  progressText: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#333', // Adjust color as needed
+  },
+  controlsContainer: {
+    marginTop: 40,
+    alignItems: 'center',
+  },
+  spacer: {
+    height: 15,
+  },
+  infoContainer: {
+    marginTop: 20,
+  }
+});
+  ```
+
+## Props
+
+| Prop                | Type                                | Default    | Required | Description                                                                                         |
+| :------------------ | :---------------------------------- | :--------- | :------- | :-------------------------------------------------------------------------------------------------- |
+| `progress`          | `number`                            |            | Yes      | The current progress value, from 0 (empty) to 1 (full).                                           |
+| `progressColor`     | `string`                            |            | Yes      | Color string for the active progress arc.                                                           |
+| `trackColor`        | `string`                            |            | Yes      | Color string for the background track of the circle.                                                |
+| `size`              | `number`                            | `100`      | No       | Diameter of the progress circle in pixels.                                                          |
+| `strokeWidth`       | `number`                            | `8`        | No       | Thickness of the progress and track arcs in pixels.                                                 |
+| `animationDuration` | `number`                            | `1000`     | No       | Duration of the progress animation in milliseconds.                                                 |
+| `children`          | `React.ReactNode`                   |            | No       | Optional content (e.g., text, icon) to display centered within the circle.                        |
+| `containerStyle`    | `StyleProp<ViewStyle>`              |            | No       | Custom styles applied to the root `View` container that wraps the SVG and children.                 |
+| `reduceMotion`      | `'never' \| 'always' \| 'system'` | `'system'` | No       | Controls if/when animations are disabled based on system accessibility settings or user preference. |
