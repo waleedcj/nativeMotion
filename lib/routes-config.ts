@@ -54,7 +54,9 @@ export const ROUTES: EachRoute[] = [
       {title: "Scroll Pagination Dots", href: "/scroll-pagination-dots"},
       {title: "Swipe Slider", href: "/swipe-slider"},
       {title: "Circular Progress", href: "/animated-progress-circle"},
+      {title: "Transition Circular Progress", href: "/transition-progress-circle"},
       {title: "Pie Chart Insights", href: "/pie-chart-insights"},
+      {title: "All In One Search Bar", href: "/all-in-one-search-bar"},
     ],
   },
   {

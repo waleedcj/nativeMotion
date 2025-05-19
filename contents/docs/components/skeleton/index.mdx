@@ -33,12 +33,13 @@ import Animated, {
 	ReduceMotion,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
-import { useAppColors } from "@/hooks/useAppColors";
 
 type SkeletonProps = {
 	isLoading: boolean;
-	children: ReactNode;
-	style?: StyleProp<ViewStyle>;
+	baseColor: string; // Background color of the skeleton
+	shimmerColor: string; // Color of the moving shimmer highlight
+	children?: ReactNode;
+	style: StyleProp<ViewStyle>;
 	duration?: number;
 	delay?: number;
     reduceMotion?: "always" | "never" | "system";
@@ -49,15 +50,15 @@ const GRADIENT_WIDTH_PERCENTAGE = 1; //how wide you want the gradient to be
 const Skeleton: React.FC<SkeletonProps> = ({
 	isLoading,
 	children,
+	baseColor,
+	shimmerColor,
 	style,
 	duration = 1000,
     reduceMotion = 'system'
 }) => {
-	const colors = useAppColors();
 	const sharedValue = useSharedValue(0);
 	const componentWidth = useSharedValue(0);
-	const baseColor = colors.Neutral50;
-	const shimmerColor = colors.Neutral70;
+
 
     const motion =
 		reduceMotion === "never"
@@ -139,7 +140,7 @@ const Skeleton: React.FC<SkeletonProps> = ({
 			</Animated.View>
 		</View>
 	) : (
-		<>{children}</>
+		children ? <>{children}</> : null
 	);
 };
 
@@ -186,73 +187,74 @@ export default function SkeletonPage() {
 
 			return () => clearTimeout(timer);
 		}
-	}, [isLoading]); 
+	}, [isLoading]);
 
 	const triggerReload = () => {
-		setIsLoading(true); 
+		setIsLoading(true);
 	};
+
+	// const baseColor = colors.Neutral50;
+	// const shimmerColor = colors.Neutral70;
 
 	const avatarUrl = "https://picsum.photos/100";
 	const name = "Walid Memon";
 	const description = "Software Developer | React Native Enthusiast";
 
 	return (
-		<SafeAreaView  style={styles.screen}>
+		<SafeAreaView style={styles.screen}>
 			{/* Avatar Skeleton/Image */}
-            <View style={[styles.itemContainer]}>
-
-          {/* width and height of the skeleton must be specified */}
-			<Skeleton isLoading={isLoading} style={styles.skeletonAvatar} >
-				<Image source={{ uri: avatarUrl }} style={styles.actualAvatar} />
-			</Skeleton>
-
-			{/* Text Lines Container */}
-			<View style={styles.textContainer}>
-				{/* Name Skeleton/Text */}
-				<Skeleton isLoading={isLoading} style={styles.skeletonLineLong} reduceMotion="never">
-					<Text
-						style={[
-							styles.nameText,
-							{ color: colors.Neutral900 },
-						]}
-						numberOfLines={1}
-					>
-						{name}
-					</Text>
+			<View style={[styles.itemContainer]}>
+				{/* width and height of the skeleton must be specified */}
+				<Skeleton
+					isLoading={isLoading}
+					style={styles.skeletonAvatar}
+					baseColor={colors.Neutral50}
+					shimmerColor={colors.Neutral70}
+				>
+					<Image source={{ uri: avatarUrl }} style={styles.actualAvatar} />
 				</Skeleton>
 
-				{/* Description Skeleton/Text */}
-				<Skeleton isLoading={isLoading} style={styles.skeletonLineShort} reduceMotion="never">
-					<Text
-						style={[
-							styles.descriptionText,
-							{ color: colors.Neutral500 },
-						]}
-						numberOfLines={1}
+				{/* Text Lines Container */}
+				<View style={styles.textContainer}>
+					{/* Name Skeleton/Text */}
+					<Skeleton
+						isLoading={isLoading}
+						style={styles.skeletonLineLong}
+						reduceMotion="never"
+						baseColor={colors.Neutral50}
+						shimmerColor={colors.Neutral70}
 					>
-						{description}
-					</Text>
-				</Skeleton>
+						<Text style={[styles.nameText, { color: colors.Neutral900 }]} numberOfLines={1}>
+							{name}
+						</Text>
+					</Skeleton>
+
+					{/* Description Skeleton/Text */}
+					<Skeleton
+						isLoading={isLoading}
+						style={styles.skeletonLineShort}
+						reduceMotion="never"
+						baseColor={colors.Neutral50}
+						shimmerColor={colors.Neutral70}
+					>
+						<Text style={[styles.descriptionText, { color: colors.Neutral500 }]} numberOfLines={1}>
+							{description}
+						</Text>
+					</Skeleton>
+				</View>
 			</View>
-            </View>
-            <Button
-                title={'Reload Animation'}
-                onPress={triggerReload}
-                disabled={isLoading}
-                color={colors.PrimaryNormal}
-            />
+			<Button title={"Reload Animation"} onPress={triggerReload} disabled={isLoading} color={colors.PrimaryNormal} />
 		</SafeAreaView>
 	);
 }
 
-
 const styles = StyleSheet.create({
-    screen: {
-        flex: 1,
-        paddingTop: 50,
-        alignItems: 'center',
-        justifyContent: 'center'
-    },
+	screen: {
+		flex: 1,
+		paddingTop: 50,
+		alignItems: "center",
+		justifyContent: "center",
+	},
 	itemContainer: {
 		flexDirection: "row",
 		alignItems: "center",
@@ -266,14 +268,14 @@ const styles = StyleSheet.create({
 		marginRight: 12,
 	},
 	textContainer: {
-		flex: 1, 
+		flex: 1,
 		justifyContent: "center",
 	},
 	skeletonLineLong: {
-		height: 18, 
-		width: "95%", 
+		height: 18,
+		width: "95%",
 		borderRadius: 4,
-		marginBottom: 8, 
+		marginBottom: 8,
 	},
 	skeletonLineShort: {
 		height: 14,
@@ -288,8 +290,8 @@ const styles = StyleSheet.create({
 	nameText: {
 		fontSize: 16,
 		fontWeight: "600",
-		lineHeight: 18, 
-		marginBottom: 8, 
+		lineHeight: 18,
+		marginBottom: 8,
 	},
 	descriptionText: {
 		fontSize: 12,
@@ -303,7 +305,9 @@ const styles = StyleSheet.create({
 | Prop         | Type                                | Default    | Required | Description                                                                                                |
 | :----------- | :---------------------------------- | :--------- | :------- | :--------------------------------------------------------------------------------------------------------- |
 | `isLoading`  | `boolean`                           |            | Yes      | Controls whether the skeleton placeholder or the actual `children` are rendered.                           |
-| `children`   | `ReactNode`                         |            | Yes      | The actual content to display once `isLoading` becomes `false`.                                            |
-| `style`      | `StyleProp<ViewStyle>`              |            | Yes       | Custom styles applied to the skeleton placeholder `View`. Crucial for setting width, height, borderRadius, etc. |
+|`baseColor`    |`string`                            |            |  Yes     | Background color of the skeleton                                                                             |
+|`shimmerColor`|`string`                             |            |  Yes     | Color of the moving shimmer highlight                                                                        |
+| `children`   | `ReactNode`                         |            | No       | The actual content to display once `isLoading` becomes `false`.                                            |
+| `style`      | `StyleProp<ViewStyle>`              |            | Yes      | Custom styles applied to the skeleton placeholder `View`. Crucial for setting width, height, borderRadius, etc. |
 | `duration`   | `number`                            | `1000`     | No       | The duration (in milliseconds) for one cycle of the shimmer animation.                                   |
-| `reduceMotion`| `'always' \| 'never' \| 'system'` | `'system'` | No       | Controls if/when animations are disabled (`'always'`, `'never'`, or based on device accessibility settings). |
+| `reduceMotion`| `'always' \| 'never' \| 'system'` | `'system'` | No        | Controls if/when animations are disabled (`'always'`, `'never'`, or based on device accessibility settings). |

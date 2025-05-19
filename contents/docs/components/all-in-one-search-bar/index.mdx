@@ -1,0 +1,883 @@
+---
+title: All in one Search Bar
+description: An animated search input component that expands on focus to display a list of recent searches or live, debounced search results. It includes customizable styling and an optional microphone icon for voice input.
+tags: [expo, react-native, search-bar, animation, reanimated, autocomplete, recent-searches, ui-component, input, tanstack, zustand, async-storage]
+---
+
+<img src="https://cdn.jsdelivr.net/gh/waleedcj/EziuiAssets/eas-update.svg" width={250} height={250}/>
+Scan to view the component
+
+  <Stepper>
+  <StepperItem title="Step 1: Install Dependencies">
+    local storage library available on expo
+
+    ```plaintext
+    npx expo install @react-native-async-storage/async-storage
+    ```
+    We will be using `tanstack` query for managing our queries and `zustand` for a `global state`, good for data that needs to be reused all the time
+
+    ```plaintext
+    npm i @tanstack/react-query zustand
+    ```
+  </StepperItem>
+
+  <StepperItem title="Step 2: Create a a file store/useRecentSearchStore.ts">
+    This Zustand store manages and persists a user's recent search terms using AsyncStorage, providing actions to load, add, remove, and clear them.
+
+  
+  ```typescript:useRecentSearchesStore.tsx
+import { create } from 'zustand';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const MAX_RECENT_SEARCHES = 10;
+const STORAGE_KEY = '@app_recent_searches';
+
+type RecentSearchesState = {
+  recentSearches: string[];
+  isLoaded: boolean;
+  loadRecentSearches: () => Promise<void>;
+  addRecentSearch: (term: string) => Promise<void>;
+  removeRecentSearch: (term: string) => Promise<void>;
+  clearAllRecentSearches: () => Promise<void>;
+}
+
+export const useRecentSearchesStore = create<RecentSearchesState>((set, get) => ({
+  recentSearches: [],
+  isLoaded: false,
+
+  loadRecentSearches: async () => {
+    if (get().isLoaded) return;
+    try {
+      const storedSearches = await AsyncStorage.getItem(STORAGE_KEY);
+      if (storedSearches) {
+        set({ recentSearches: JSON.parse(storedSearches), isLoaded: true });
+      } else {
+        set({ isLoaded: true });
+      }
+    } catch (error) {
+      console.error('Failed to load recent searches:', error);
+      set({ isLoaded: true }); // Mark as loaded even if error to prevent multiple loads
+    }
+  },
+
+  addRecentSearch: async (term: string) => {
+    const cleanedTerm = term.trim();
+    if (!cleanedTerm) return;
+
+    const currentSearches = get().recentSearches;
+    // Remove if already exists to move it to the top
+    const filteredSearches = currentSearches.filter(s => s.toLowerCase() !== cleanedTerm.toLowerCase());
+    
+    const newSearches = [cleanedTerm, ...filteredSearches].slice(0, MAX_RECENT_SEARCHES);
+
+    set({ recentSearches: newSearches });
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newSearches));
+    } catch (error) {
+      console.error('Failed to save recent search:', error);
+    }
+  },
+
+  removeRecentSearch: async (term: string) => {
+    const newSearches = get().recentSearches.filter(s => s !== term);
+    set({ recentSearches: newSearches });
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newSearches));
+    } catch (error) {
+      console.error('Failed to remove recent search:', error);
+    }
+  },
+
+  clearAllRecentSearches: async () => {
+    set({ recentSearches: [] });
+    try {
+      await AsyncStorage.removeItem(STORAGE_KEY);
+    } catch (error) {
+      console.error('Failed to clear all recent searches:', error);
+    }
+  },
+}));
+
+// Initialize by loading searches when the store is first used/imported.
+// This is a common pattern, but for critical initial data, you might call it in your App.tsx.
+useRecentSearchesStore.getState().loadRecentSearches();
+  ```
+
+  </StepperItem>
+
+  <StepperItem title="Step 3: Create a file api/MockApi.ts">
+    This file defines a mock API `(fetchSearchResults)` that simulates fetching search results by filtering a predefined list of strings after a delay. You can add your own api here.
+
+    ```typescript:MockApi.ts
+  // db searchable items
+const DUMMY_DATA_SOURCE = [
+    "React Native Guide", "JavaScript Basics", "Expo Configuration",
+    "Animated Components in React", "Styling in Expo", "State Management with Zustand",
+    "Networking with Fetch API", "Redux Toolkit Examples", "TypeScript for Beginners",
+    "Native Modules Explained", "UI Design Principles", "Component Libraries",
+    "Firebase Integration", "GraphQL Queries", "REST API Best Practices",
+    "App Deployment Steps", "Performance Optimization", "Debugging Techniques",
+    "Data Structures", "Algorithms in JS", "Software Architecture",
+    "Project Management Tools", "Agile Development", "Scrum Master Guide",
+    "Version Control with Git", "GitHub Collaboration", "CI/CD Pipelines",
+    "Docker for Developers", "Kubernetes Overview", "Cloud Computing AWS",
+    "Google Cloud Platform", "Microsoft Azure Services"
+  ];
+  
+  export type SearchResult = {
+    id: string;
+    title: string;
+  }
+  
+  // Simulates an API call
+  export const fetchSearchResults = async (query: string): Promise<SearchResult[]> => {
+    console.log(`API: Searching for "${query}"`);
+    if (!query || query.length < 1) { // Allow search for 1 char for this dummy example
+      return [];
+    }
+  
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+  
+    const lowerCaseQuery = query.toLowerCase();
+    const results = DUMMY_DATA_SOURCE
+      .filter(item => item.toLowerCase().includes(lowerCaseQuery))
+      .map((item, index) => ({ id: `${index}-${item.replace(/\s+/g, '-')}`, title: item }));
+    
+    console.log(`API: Found ${results.length} results for "${query}"`);
+    return results;
+  };
+    ```
+  </StepperItem>
+
+  <StepperItem title="Step 4: Create a tanstack query hook useSearchResultsQuery.ts">
+  This tanstack react query hook `(useSearchResultsQuery)` fetches and caches search results from the fetchSearchResults API, enabling the query only when a minimum search term length is met and an isSearchEnabled flag is true.
+
+     ```typescript:useSearchResultsQuery.ts
+   // hooks/useSearchResultsQuery.ts
+import { useQuery } from "@tanstack/react-query";
+import { fetchSearchResults, SearchResult } from "@/api/MockApi";
+
+type UseSearchResultsQueryOptions = {
+	searchTerm: string; // The debounced search term
+	minQueryLength: number;
+	isSearchEnabled: boolean; // e.g., isFocused
+}
+
+export const useSearchResultsQuery = ({
+	searchTerm,
+	minQueryLength,
+	isSearchEnabled,
+}: UseSearchResultsQueryOptions) => {
+	const {
+		data: searchResults,
+		isLoading,
+		isError,
+		error,
+		refetch,
+		isFetching, // Useful to know if a refetch is in progress
+	} = useQuery<SearchResult[], Error>({
+		queryKey: ["searchResults", searchTerm], // Use the debounced searchTerm directly
+		queryFn: () => fetchSearchResults(searchTerm),
+		enabled: isSearchEnabled && searchTerm.length >= minQueryLength,
+	});
+
+	return {
+		searchResults,
+		isLoadingSearchResults: isLoading,
+		isFetchingSearchResults: isFetching, // Export isFetching
+		isErrorSearchResults: isError,
+		searchError: error,
+		refetchSearchResults: refetch,
+	};
+};
+
+    ```
+  </StepperItem>
+
+    <StepperItem title="Step 5: Create a debounce function">
+    This `useDebounce` hook provides a value that only updates after a specified delay since the original value last changed, optimizing API calls triggered by rapid input in the search component.
+
+    ```typescript:useDebounce.ts
+   import { useState, useEffect } from 'react';
+
+  export function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    // Cleanup function to clear the timeout if value changes before delay has passed
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]); // Only re-call effect if value or delay changes
+
+  return debouncedValue;
+}
+    ```
+  </StepperItem>
+
+      <StepperItem title="Step 6: Wrap your App/root with the `QueryClientProvider`">
+    ```typescript:_layout.tsx
+  import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+  const queryClient = new QueryClient();
+
+  export default function RootLayout() {
+  return (
+    {/* this must always wrap the entire app top level ;) */}
+    <QueryClientProvider client={queryClient}>
+     {/* your app/screens/other providers */}
+    </QueryClientProvider>
+  );
+}
+    ```
+  </StepperItem>
+
+<StepperItem title="Step 7: Finally Create file SearchBar.tsx">
+    import all the files created above according to your project structure in this file
+
+    ```typescript:SearchBar.tsx
+import React, { useState, useEffect, useRef } from "react";
+import {
+	View,
+	TextInput,
+	StyleSheet,
+	TouchableOpacity,
+	Text,
+	FlatList,
+	Keyboard,
+	Dimensions,
+	ActivityIndicator,
+} from "react-native";
+import Animated, {
+	useSharedValue,
+	useAnimatedStyle,
+	withTiming,
+	Easing,
+	interpolate,
+	Extrapolation,
+	ReduceMotion,
+} from "react-native-reanimated";
+import { useRecentSearchesStore } from "@/store/useRecentSearchStore";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useSearchResultsQuery } from "@/hooks/useGetSearchResults";
+import { SearchResult } from "@/api/MockApi";
+
+const INPUT_HEIGHT = 50;
+const PADDING_VERTICAL = 0; // Padding within the expanded container for recent searches
+const HISTORY_HEIGHT = Dimensions.get("window").height * 0.3;
+const MIN_QUERY_LENGTH = 1;
+const DEBOUNCE_DELAY = 300;
+
+type AnimatedSearchBarProps = {
+	onSearchSubmit: (term: string) => void;
+	placeholder?: string;
+	searchStartIcon: React.ReactNode;
+	recentSearchStartIcon?: React.ReactNode;
+	recentSearchEndIcon?: React.ReactNode;
+	loaderColor?: string;
+	inputTextColor?: string;
+	containerBackgroundColor?: string;
+	recentSearchTextColor?: string;
+	recentSearchesTitleColor?: string;
+	reduceMotion?: "never" | "always" | "system";
+};
+
+const SearchBar: React.FC<AnimatedSearchBarProps> = ({
+	onSearchSubmit,
+	reduceMotion = "system",
+	placeholder = "Search...",
+	loaderColor = "#888",
+	recentSearchStartIcon,
+	recentSearchEndIcon,
+	inputTextColor = "#333",
+	containerBackgroundColor = "#FFFFFF",
+	recentSearchTextColor = "#555",
+	recentSearchesTitleColor = "#333",
+	searchStartIcon,
+}) => {
+	const [searchTerm, setSearchTerm] = useState("");
+	const [isFocused, setIsFocused] = useState(false);
+	const { recentSearches, addRecentSearch, removeRecentSearch, isLoaded } = useRecentSearchesStore();
+	const animationProgress = useSharedValue(0); // 0: closed, 1: open
+	const inputRef = useRef<TextInput>(null);
+	const debouncedSearchTerm = useDebounce(searchTerm, DEBOUNCE_DELAY);
+	const { searchResults, isLoadingSearchResults, isErrorSearchResults, searchError } = useSearchResultsQuery({
+		searchTerm: debouncedSearchTerm,
+		minQueryLength: MIN_QUERY_LENGTH,
+		isSearchEnabled: isFocused, // Pass the focus state
+	});
+
+	const motion =
+		reduceMotion === "never"
+			? ReduceMotion.Never
+			: reduceMotion === "always"
+				? ReduceMotion.Always
+				: ReduceMotion.System;
+
+	const TIMING_CONFIG = {
+		duration: 350,
+		easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+		reduceMotion: motion,
+	};
+
+	useEffect(() => {
+		// Load searches if not already loaded (e.g., if app was closed and reopened)
+		if (!isLoaded) {
+			useRecentSearchesStore.getState().loadRecentSearches();
+		}
+	}, [isLoaded]);
+
+	//handle functions
+	const handleFocus = () => {
+		setIsFocused(true);
+		animationProgress.value = withTiming(1, TIMING_CONFIG);
+	};
+
+	const handleBlur = () => {
+		// Delay blur action to allow tap on recent search item
+		setTimeout(() => {
+			if (!inputRef.current?.isFocused()) {
+				// Check if still focused (e.g., by tapping an item)
+				setIsFocused(false);
+				animationProgress.value = withTiming(0, TIMING_CONFIG);
+			}
+		}, 100);
+	};
+
+	const handleSubmit = () => {
+		if (searchTerm.trim()) {
+			onSearchSubmit(searchTerm.trim());
+			addRecentSearch(searchTerm.trim());
+			setSearchTerm(""); // Optionally clear input after search
+			Keyboard.dismiss();
+			inputRef.current?.blur(); // This will trigger handleBlur
+		}
+	};
+
+	const handleRecentSearchPress = (term: string) => {
+		setSearchTerm(term);
+		onSearchSubmit(term);
+		// No need to addRecentSearch here as it's already recent
+		Keyboard.dismiss();
+		inputRef.current?.blur();
+	};
+
+	const handleSearchPress = (term: string) => {
+		addRecentSearch(term.trim());
+		onSearchSubmit(term);
+		setSearchTerm("");
+		// No need to addRecentSearch here as it's already recent
+		Keyboard.dismiss();
+		inputRef.current?.blur();
+	};
+
+	//animations
+	const animatedContainerStyle = useAnimatedStyle(() => {
+		const height = interpolate(
+			animationProgress.value,
+			[0, 1],
+			[INPUT_HEIGHT, HISTORY_HEIGHT + PADDING_VERTICAL],
+			Extrapolation.CLAMP
+		);
+		return {
+			height,
+		};
+	});
+
+	const animatedRecentSearchesStyle = useAnimatedStyle(() => {
+		const opacity = interpolate(
+			animationProgress.value,
+			[0, 0.5, 1],
+			[0, 0, 1], // Fade in after container starts expanding
+			Extrapolation.CLAMP
+		);
+		const translateY = interpolate(
+			animationProgress.value,
+			[0, 1],
+			[-20, 0], // Slight upward movement as it fades in
+			Extrapolation.CLAMP
+		);
+		return {
+			opacity,
+			transform: [{ translateY }],
+		};
+	});
+
+	//flatlist renders
+	const renderRecentSearchItem = ({ item }: { item: string }) => (
+		<TouchableOpacity style={styles.recentItem} onPress={() => handleRecentSearchPress(item)}>
+			{recentSearchStartIcon}
+			<Text style={[styles.recentItemText, { color: recentSearchTextColor }]}>{item}</Text>
+			<TouchableOpacity onPress={() => removeRecentSearch(item)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+				{recentSearchEndIcon}
+			</TouchableOpacity>
+		</TouchableOpacity>
+	);
+
+	const renderSearchResultItem = ({ item }: { item: SearchResult }) => (
+		<TouchableOpacity style={styles.recentItem} onPress={() => handleSearchPress(item.title)}>
+			<Text style={[styles.recentItemText, { color: recentSearchTextColor }]}>{item.title}</Text>
+		</TouchableOpacity>
+	);
+
+	//conditions for the lists
+	const showRecentSearches = isFocused && debouncedSearchTerm.length < MIN_QUERY_LENGTH;
+	const showSearchResults = isFocused && debouncedSearchTerm.length >= MIN_QUERY_LENGTH;
+
+	return (
+		<Animated.View
+			style={[
+				styles.outerContainer,
+				{
+					backgroundColor: containerBackgroundColor,
+					width: Dimensions.get("window").width - 32, //100% - left margin 16 - right margin 16
+				},
+				animatedContainerStyle,
+			]}
+		>
+			<View style={styles.inputRow}>
+				{searchStartIcon}
+				<TextInput
+					ref={inputRef}
+					style={[styles.input, { color: inputTextColor }]}
+					placeholder={placeholder}
+					placeholderTextColor="#A0A0A0"
+					value={searchTerm}
+					onChangeText={setSearchTerm}
+					onFocus={handleFocus}
+					onBlur={handleBlur}
+					onSubmitEditing={handleSubmit}
+					returnKeyType="search"
+				/>
+			</View>
+
+			{isFocused && (
+				<Animated.View style={[styles.recentSearchesWrapper, animatedRecentSearchesStyle]}>
+					{showRecentSearches && (
+						<View style={styles.searchResultsListContainer}>
+							{recentSearches.length > 0 ? (
+								<>
+									<Text style={[styles.recentSearchesTitle, { color: recentSearchesTitleColor }]}>Recent Searches</Text>
+									<FlatList
+										data={recentSearches}
+										renderItem={renderRecentSearchItem}
+										contentContainerStyle={{ paddingBottom: 32 }} // Increased bottom padding
+										keyExtractor={(item, index) => `${item}-${index}`}
+										showsVerticalScrollIndicator={false}
+										keyboardShouldPersistTaps="handled" // Important for TouchableOpacity inside FlatList
+									/>
+								</>
+							) : (
+								recentSearches.length === 0 && <Text style={styles.noResultsText}>No recent searches</Text>
+							)}
+						</View>
+					)}
+					{/* normally it is good practice to load first not load finish check error if no error then display the content */}
+					{showSearchResults && (
+						<View style={styles.searchResultsListContainer}>
+							{isLoadingSearchResults ? (
+								<ActivityIndicator size="small" color={loaderColor} style={{ marginTop: 20 }} />
+							) : isErrorSearchResults ? (
+								<Text style={styles.errorText}>Error: {searchError?.message || "Could not fetch results"}</Text>
+							) : searchResults && searchResults?.length > 0 ? (
+								<FlatList
+									data={searchResults}
+									renderItem={renderSearchResultItem}
+									keyExtractor={(item) => `result-${item.id}`}
+									keyboardShouldPersistTaps="handled"
+									showsVerticalScrollIndicator={false}
+								/>
+							) : (
+								searchResults &&
+								recentSearches.length === 0 && (
+									<Text style={styles.noResultsText}>No results found for "{debouncedSearchTerm}"</Text>
+								)
+							)}
+						</View>
+					)}
+				</Animated.View>
+			)}
+		</Animated.View>
+	);
+};
+
+const styles = StyleSheet.create({
+	outerContainer: {
+		borderRadius: 12,
+		marginHorizontal: 16,
+		overflow: "hidden",
+		// Shadow (iOS)
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.15,
+		shadowRadius: 4,
+		// Shadow (Android)
+		elevation: 5,
+		// position: "absolute",
+		zIndex: 1,
+	},
+	inputRow: {
+		flexDirection: "row",
+		alignItems: "center",
+		height: INPUT_HEIGHT,
+		paddingHorizontal: 12,
+	},
+	searchResultsListContainer: {
+		flex: 1,
+	},
+	errorText: {
+		textAlign: "center",
+		marginTop: 20,
+		color: "#ff3333",
+	},
+	noResultsText: {
+		textAlign: "center",
+		marginTop: 20,
+		color: "#888",
+	},
+	input: {
+		flex: 1,
+		fontSize: 16,
+		height: "100%",
+	},
+	recentSearchesWrapper: {
+		flex: 1, // Take available space within the animated outer container
+		paddingHorizontal: 15,
+		paddingBottom: PADDING_VERTICAL, // Space at the bottom
+	},
+	recentSearchesTitle: {
+		fontSize: 14,
+		fontWeight: "600",
+		marginTop: 10,
+		marginBottom: 8,
+	},
+	recentItem: {
+		flexDirection: "row",
+		alignItems: "center",
+		paddingVertical: 10,
+	},
+	recentItemText: {
+		flex: 1,
+		fontSize: 15,
+	},
+});
+
+export default SearchBar;
+    ```
+  </StepperItem>
+
+</Stepper>
+
+## Usage
+
+demonstrates the SearchBar component within a scrollable layout featuring sections for featured courses and course categories.
+
+  ```typescript:SearchBarPage.tsx
+import React from "react";
+import {
+	SafeAreaView,
+	StyleSheet,
+	Text,
+	View,
+	Alert,
+	ScrollView,
+	FlatList,
+	Image,
+	TouchableOpacity,
+	Dimensions,
+	Platform,
+} from "react-native";
+import SearchBar from "@/components/ui/SearchBar";
+import { useAppColors } from "@/hooks/useAppColors";
+import { Ionicons } from "@expo/vector-icons";
+
+const { width } = Dimensions.get("window");
+const CARD_WIDTH = width * 0.7; // Width for featured course cards
+const CATEGORY_ITEM_SIZE = width / 3 - 20; // For category items
+
+// Dummy Data
+const featuredCourses = [
+	{
+		id: "1",
+		title: "Advanced React Native Mastery",
+		instructor: "Jane Doe",
+		image: "https://dummyjson.com/image/300x180/A020F0?fontFamily=pacifico&text=I+am+walid+memon",
+		rating: 4.8,
+		students: 1200,
+	},
+	{
+		id: "2",
+		title: "Full-Stack JavaScript Web Dev",
+		instructor: "John Smith",
+		image: "https://dummyjson.com/image/300x180/FFFF00?fontFamily=pacifico&text=Full+stack+dev",
+		rating: 4.9,
+		students: 2500,
+	},
+	{
+		id: "3",
+		title: "Data Science with Python & AI",
+		instructor: "Alice Brown",
+		image: "https://dummyjson.com/image/300x180/82CAFF?fontFamily=pacifico&text=Data+Science+Python",
+		rating: 4.7,
+		students: 1800,
+	},
+	{
+		id: "4",
+		title: "Expo & Reanimated Deep Dive",
+		instructor: "Dev Guru",
+		image: "https://dummyjson.com/image/300x180/98FB98?fontFamily=roboto&text=Expo",
+		rating: 4.6,
+		students: 950,
+	},
+];
+
+const courseCategories = [
+	{
+		id: "cat1",
+		name: "Mobile Dev",
+		icon: "phone-portrait-outline",
+		color: "#E3A547",
+	},
+	{ id: "cat2", name: "Web Dev", icon: "globe-outline", color: "#9C5BF5" },
+	{
+		id: "cat3",
+		name: "Data Science",
+		icon: "analytics-outline",
+		color: "#01BF7A",
+	},
+	{ id: "cat4", name: "Cloud", icon: "cloud-outline", color: "#1656D0" },
+	{
+		id: "cat5",
+		name: "Design",
+		icon: "color-palette-outline",
+		color: "#F65936",
+	},
+	{ id: "cat6", name: "DevOps", icon: "git-network-outline", color: "#FFA24B" },
+];
+
+export default function SearchBarPage() {
+	const colors = useAppColors();
+
+	const handleSearch = (term: string) => {
+		Alert.alert("Search Submitted", `Navigating to search results for: ${term}`);
+	};
+
+	const renderFeaturedCourse = ({ item }: { item: (typeof featuredCourses)[0] }) => (
+		<TouchableOpacity
+			style={[styles.featuredCard, { backgroundColor: colors.Neutral0 }]}
+			onPress={() => Alert.alert("Course Selected", item.title)}
+		>
+			<Image source={{ uri: item.image }} style={styles.featuredCardImage} />
+			<View style={styles.featuredCardContent}>
+				<Text style={[styles.featuredCardTitle, { color: colors.Neutral900 }]}>{item.title}</Text>
+				<Text style={[styles.featuredCardInstructor, { color: colors.Neutral500 }]}>{`By ${item.instructor}`}</Text>
+				<View style={styles.featuredCardFooter}>
+					<Ionicons name="star" size={16} color={colors.AuxColorTwo} />
+					<Text style={[styles.featuredCardRating, { color: colors.Neutral700 }]}>{item.rating}</Text>
+					<Text style={[styles.featuredCardStudents, { color: colors.Neutral500 }]}>{`${item.students} students`}</Text>
+				</View>
+			</View>
+		</TouchableOpacity>
+	);
+
+	const renderCategoryItem = ({ item }: { item: (typeof courseCategories)[0] }) => (
+		<TouchableOpacity
+			style={[
+				styles.categoryItem,
+				{
+					backgroundColor: item.color + "20" /* Light background from color */,
+				},
+			]}
+			onPress={() => Alert.alert("Category Selected", item.name)}
+		>
+			<Ionicons name={item.icon as any} size={30} color={item.color} />
+			<Text style={[styles.categoryName, { color: item.color }]}>{item.name}</Text>
+		</TouchableOpacity>
+	);
+
+	return (
+		<SafeAreaView style={[styles.safeArea, { backgroundColor: colors.bgColor }]}>
+			<View style={{ flex: 1 }}>
+				{/* AnimatedSearchBar is outside the ScrollView to remain fixed or behave as a header */}
+				<View style={styles.searchBarContainer}>
+					<SearchBar
+						onSearchSubmit={handleSearch}
+						placeholder="Search courses, instructors..."
+						searchStartIcon={<Ionicons name="search-outline" size={22} color={colors.Neutral500} style={styles.icon} />}
+						recentSearchStartIcon={
+							<Ionicons name="time-outline" size={18} color={colors.Neutral500} style={styles.icon} />
+						}
+						recentSearchEndIcon={<Ionicons name="close-outline" size={22} color={colors.Neutral300} />}
+						reduceMotion="never"
+						containerBackgroundColor={colors.Neutral0}
+						inputTextColor={colors.Neutral900}
+						loaderColor={colors.Neutral500}
+						recentSearchesTitleColor={colors.Neutral700}
+						recentSearchTextColor={colors.Neutral900}
+					/>
+				</View>
+
+				<ScrollView
+					style={styles.scrollView}
+					showsVerticalScrollIndicator={false}
+					keyboardShouldPersistTaps="handled" // Important if search bar stays open while scrolling
+				>
+					<View style={styles.headerContent}>
+						<Text style={[styles.welcomeTitle, { color: colors.Neutral900 }]}>Welcome Back!</Text>
+						<Text style={[styles.welcomeSubtitle, { color: colors.Neutral500 }]}>What will you learn today?</Text>
+					</View>
+					{/* Featured Courses Section */}
+					<View style={styles.sectionContainer}>
+						<Text style={[styles.sectionTitle, { color: colors.Neutral700 }]}>Featured Courses</Text>
+						<FlatList
+							data={featuredCourses}
+							renderItem={renderFeaturedCourse}
+							keyExtractor={(item) => item.id}
+							horizontal
+							showsHorizontalScrollIndicator={false}
+							contentContainerStyle={styles.horizontalListPadding}
+						/>
+					</View>
+					{/* Categories Section */}
+					<View style={styles.sectionContainer}>
+						<Text style={[styles.sectionTitle, { color: colors.Neutral700 }]}>Categories</Text>
+						<FlatList
+							data={courseCategories}
+							renderItem={renderCategoryItem}
+							keyExtractor={(item) => item.id}
+							numColumns={3} // Adjust as needed
+							columnWrapperStyle={styles.categoryRow}
+							contentContainerStyle={styles.categoryListContainer}
+							scrollEnabled={false} // if it's short, disable scroll
+						/>
+					</View>
+					<View style={{ height: 50 }} />
+				</ScrollView>
+			</View>
+		</SafeAreaView>
+	);
+}
+
+const styles = StyleSheet.create({
+	safeArea: {
+		flex: 1,
+	},
+	searchBarContainer: {
+		paddingTop: Platform.OS === "android" ? 10 : 0,
+	},
+	scrollView: {
+		flex: 1,
+	},
+	icon: {
+		marginRight: 8,
+	},
+	headerContent: {
+		paddingHorizontal: 20,
+		paddingTop: 20,
+		paddingBottom: 20,
+	},
+	welcomeTitle: {
+		fontSize: 28,
+		fontWeight: "bold",
+	},
+	welcomeSubtitle: {
+		fontSize: 16,
+		marginTop: 4,
+	},
+	sectionContainer: {
+		marginBottom: 30,
+	},
+	sectionTitle: {
+		fontSize: 20,
+		fontWeight: "600",
+		marginHorizontal: 20,
+		marginBottom: 15,
+	},
+	horizontalListPadding: {
+		paddingHorizontal: 20,
+	},
+	featuredCard: {
+		width: CARD_WIDTH,
+		marginRight: 15,
+		borderRadius: 12,
+		overflow: "hidden", // For borderRadius on image
+	},
+	featuredCardImage: {
+		width: "100%",
+		height: 150, // Adjust as needed
+	},
+	featuredCardContent: {
+		padding: 12,
+	},
+	featuredCardTitle: {
+		fontSize: 16,
+		fontWeight: "600",
+		marginBottom: 4,
+	},
+	featuredCardInstructor: {
+		fontSize: 13,
+		marginBottom: 8,
+	},
+	featuredCardFooter: {
+		flexDirection: "row",
+		alignItems: "center",
+	},
+	featuredCardRating: {
+		fontSize: 13,
+		fontWeight: "bold",
+		marginLeft: 4,
+	},
+	featuredCardStudents: {
+		fontSize: 12,
+		marginLeft: 2,
+	},
+	categoryListContainer: {
+		paddingHorizontal: 15,
+	},
+	categoryRow: {
+		justifyContent: "space-between",
+		marginBottom: 10,
+	},
+	categoryItem: {
+		width: CATEGORY_ITEM_SIZE,
+		height: CATEGORY_ITEM_SIZE,
+		borderRadius: 12,
+		alignItems: "center",
+		justifyContent: "center",
+		padding: 10,
+	},
+	categoryName: {
+		fontSize: 12,
+		fontWeight: "500",
+		marginTop: 8,
+		textAlign: "center",
+	},
+	buttonContainer: {
+		paddingHorizontal: 20,
+		marginTop: 20,
+		marginBottom: 40,
+	},
+});
+    ```
+
+## Props
+
+| Prop                         | Type                                | Default        | Required | Description                                                                                                |
+| :--------------------------- | :---------------------------------- | :------------- | :------- | :--------------------------------------------------------------------------------------------------------- |
+| `onSearchSubmit`             | `(term: string) => void`            |                | Yes      | Callback function triggered when the user submits a search.                                                |
+| `placeholder`                | `string`                            | `"Search..."`  | No       | Placeholder text for the search input field.                                                               |
+| `searchStartIcon`            | `React.ReactNode`                   |                | Yes      | A React node (e.g., an Icon component) to display at the beginning of the search input row.              |
+| `recentSearchStartIcon`      | `React.ReactNode`                   |                | No       | Optional React node to display at the start of each recent search item in the list.                        |
+| `recentSearchEndIcon`        | `React.ReactNode`                   |                | No       | Optional React node to display at the end of each recent search item (e.g., a clear icon).               |
+| `loaderColor`                | `string`                            | `"#888"`       | No       | Color primarily used for the `ActivityIndicator`                                                           |
+| `inputTextColor`             | `string`                            | `"#333"`       | No       | Color for the text entered by the user in the search input.                                                |
+| `containerBackgroundColor`   | `string`                            | `"#FFFFFF"`    | No       | Background color for the main animated container of the search bar.                                        |
+| `recentSearchTextColor`      | `string`                            | `"#555"`       | No       | Text color for items displayed in the recent searches list.                                                |
+| `recentSearchesTitleColor`   | `string`                            | `"#333"`       | No       | Color for the "Recent Searches" title text.                                                              |
+| `reduceMotion`               | `'never' \| 'always' \| 'system'` | `'system'`     | No       | Controls animation behavior: 'never' (always animate), 'always' (never animate), or 'system' (respect device settings). |
+

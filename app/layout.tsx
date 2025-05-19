@@ -3,11 +3,11 @@ import { ThemeProvider } from "@/components/contexts/theme-provider";
 import { Navbar } from "@/components/navbar";
 import {
   Space_Mono,
-  Space_Grotesk,
   DM_Sans,
   Plus_Jakarta_Sans,
 } from "next/font/google";
 import { Footer } from "@/components/footer";
+import { QrCode } from "@/components/QrCode";
 import "@/styles/globals.css";
 
 const dmSans = DM_Sans({
@@ -32,10 +32,11 @@ const space = Space_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "AriaDocs - Template",
-  metadataBase: new URL("https://ariadocs.vercel.app/"),
+  title: "Eziui",
+  metadataBase: new URL("https://eziui.com"),
   description:
-    "This comprehensive documentation template, crafted with Next.js and available as open-source, delivers a sleek and responsive design, tailored to meet all your project documentation requirements.",
+  "A modern UI component library and design system for React Native.",
+
 };
 
 export default function RootLayout({
@@ -46,11 +47,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link
+        {/* <link
           rel="stylesheet"
           type="text/css"
           href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css"
-        />
+        /> */}
       </head>
       <body
 				className={`${dmSans.variable} ${jakarta.variable} ${space.variable} font-sans antialiased tracking-wide`}
@@ -70,6 +71,7 @@ export default function RootLayout({
               {children}
             </main>
             <Footer />
+            <QrCode />
           </div>
         </ThemeProvider>
       </body>

@@ -1,0 +1,349 @@
+---
+title: Transitioning Progress Circle
+description: Renders an animated circular SVG progress indicator with customizable appearance and optional centered content when completed it shows an icon transitioning from the progress circle.
+tags: [react-native, progress, circle, svg, animation, reanimated, transition]
+---
+
+
+<DemoLinkButton href="https://example.com/ghost-demo"  size="lg" variant="default">
+	Live Demo
+  <MyIcons.ScreenShareIcon className="h-4 w-4" />
+</DemoLinkButton>
+
+## Installation
+
+  ```typescript:TransitioningProgressCircle.tsx
+import React, { useEffect } from "react";
+import { StyleSheet, View, ViewStyle, StyleProp } from "react-native";
+import Animated, {
+	useSharedValue,
+	withTiming,
+	useAnimatedProps,
+	Easing,
+	ReduceMotion,
+	interpolate,
+	useAnimatedStyle,
+	Extrapolation,
+} from "react-native-reanimated";
+import Svg, { Circle, Path } from "react-native-svg";
+
+const DEFAULT_SIZE = 100;
+const DEFAULT_STROKE_WIDTH = 8;
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+const AnimatedPath = Animated.createAnimatedComponent(Path);
+
+type TransitioningProgressCircleProps = {
+	progress: number; // Value between 0 and 1
+	progressColor: string;
+	trackColor: string;
+	size?: number;
+	strokeWidth?: number;
+	animationDuration?: number; // Duration for progress animation
+	successAnimationDuration?: number; // Duration for success icon animation
+	children?: React.ReactNode;
+	endIcon?: React.ReactNode;
+	endIconColor?: string;
+	containerStyle?: StyleProp<ViewStyle>;
+	reduceMotion?: "never" | "always" | "system";
+};
+
+export default function TransitioningProgressCircle({
+	progress,
+	progressColor,
+	trackColor,
+	endIconColor,
+	size = DEFAULT_SIZE,
+	strokeWidth = DEFAULT_STROKE_WIDTH,
+	animationDuration = 1000,
+	successAnimationDuration = 500, // Separate duration for success animation
+	children,
+	containerStyle,
+	reduceMotion = "system",
+	endIcon,
+}: TransitioningProgressCircleProps) {
+	const actualRadius = (size - strokeWidth) / 2;
+	const actualCircumference = 2 * Math.PI * actualRadius;
+
+	const progressValue = useSharedValue(0);
+	const successState = useSharedValue(0);
+
+	const iconColor = endIconColor || progressColor;
+
+	const motion =
+		reduceMotion === "never"
+			? ReduceMotion.Never
+			: reduceMotion === "always"
+				? ReduceMotion.Always
+				: ReduceMotion.System;
+
+	const TIMING_CONFIG = {
+		duration: successAnimationDuration,
+		easing: Easing.out(Easing.quad),
+		reduceMotion: motion,
+	};
+	useEffect(() => {
+      
+		const clampedProgress = Math.max(0, Math.min(1, progress));
+		progressValue.value = withTiming(clampedProgress, {
+			...TIMING_CONFIG,
+			duration: animationDuration,
+		});
+
+		// Trigger success animation
+		if (clampedProgress === 1) {
+			successState.value = withTiming(1, TIMING_CONFIG);
+		} else {
+			// If progress drops below 1, hide success icon and show progress
+			// (could also be withTiming(0) if you want it to animate out)
+			if (successState.value === 1) {
+				// Only reset if it was fully shown
+				successState.value = withTiming(0, {
+					...TIMING_CONFIG,
+					duration: successAnimationDuration / 2,
+				});
+			}
+		}
+	}, [
+		progress,
+		animationDuration,
+		successAnimationDuration,
+		progressValue,
+		successState,
+	]);
+
+	const animatedCircleProps = useAnimatedProps(() => ({
+		strokeDashoffset: actualCircumference * (1 - progressValue.value),
+	}));
+
+	// style for the container of the progress circle and children (to fade them out)
+	const progressElementsAnimatedStyle = useAnimatedStyle(() => {
+		const opacity = interpolate(
+			successState.value,
+			[0, 0.5, 1], // Start fading out early
+			[1, 0, 0],
+			Extrapolation.CLAMP
+		);
+		const scale = interpolate(
+			successState.value,
+			[0, 1],
+			[1, 0.8], // Shrink slightly as it fades
+			Extrapolation.CLAMP
+		);
+		return {
+			opacity,
+			transform: [{ scale }],
+		};
+	});
+
+	// for the icon (to fade it in)
+	const successIconAnimatedStyle = useAnimatedStyle(() => {
+		const opacity = interpolate(
+			successState.value,
+			[0, 0.5, 1], // Start fading in after progress starts fading out
+			[0, 0, 1],
+			Extrapolation.CLAMP
+		);
+		const scale = interpolate(
+			successState.value,
+			[0, 0.5, 1],
+			[0.5, 1.1, 1], // Pop-in effect
+			Extrapolation.CLAMP
+		);
+		return {
+			opacity,
+			transform: [{ scale }],
+		};
+	});
+
+	const iconSize = size * 0.8; // icon will be 80% of the circle size
+
+	return (
+		<View
+			style={[styles.container, { width: size, height: size }, containerStyle]}
+		>
+			{/* Container for Progress Circle and Children (will fade out) */}
+			<Animated.View style={progressElementsAnimatedStyle}>
+				<Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+					<Circle
+						cx={size / 2}
+						cy={size / 2}
+						r={actualRadius}
+						stroke={trackColor}
+						fill="none"
+						strokeWidth={strokeWidth}
+						transform={`rotate(-90 ${size / 2} ${size / 2})`}
+					/>
+					<AnimatedCircle
+						cx={size / 2}
+						cy={size / 2}
+						r={actualRadius}
+						fill="none"
+						stroke={progressColor}
+						strokeWidth={strokeWidth}
+						strokeDasharray={actualCircumference}
+						animatedProps={animatedCircleProps}
+						strokeLinecap="round"
+						transform={`rotate(-90 ${size / 2} ${size / 2})`}
+					/>
+				</Svg>
+				{children && (
+					<View
+						style={[styles.childrenContainer, { width: size, height: size }]}
+					>
+						{children}
+					</View>
+				)}
+			</Animated.View>
+
+			{/* Success Icon Container (will fade in) */}
+			<Animated.View style={[styles.iconContainer, successIconAnimatedStyle]}>
+				{endIcon ? (
+					endIcon
+				) : (
+					<Svg width={iconSize} height={iconSize} viewBox="0 0 24 24">
+						<AnimatedPath
+							d="M20 6L9 17l-5-5"
+							fill="none"
+							stroke={iconColor}
+							strokeWidth="2.5"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						/>
+					</Svg>
+				)}
+			</Animated.View>
+		</View>
+	);
+}
+
+const styles = StyleSheet.create({
+	container: {
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	childrenContainer: {
+		position: "absolute",
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	iconContainer: {
+		position: "absolute",
+		alignItems: "center",
+		justifyContent: "center",
+	},
+});
+```
+
+  
+
+## Usage
+
+  ```typescript:ProgressCirclePage.tsx
+
+import React, { useState } from 'react';
+import { View, Text, Button, StyleSheet, SafeAreaView } from 'react-native';
+import TransitioningProgressCircle from '@/components/ui/TransitioningProgressCircle';
+import { useAppColors } from '@/hooks/useAppColors';
+import Feather from '@expo/vector-icons/Feather';
+
+const PROGRESS_STEP = 0.2; // Increment/decrement by 20%
+const SIZE = 150;
+
+export default function TransitioningProgressCirclePage() {
+  const colors = useAppColors();
+  const [progress, setProgress] = useState(0.2); // Initial progress
+
+  const incrementProgress = () => {
+    setProgress((prevProgress) => Math.min(1, prevProgress + PROGRESS_STEP));
+  };
+
+  const decrementProgress = () => {
+    setProgress((prevProgress) => Math.max(0, prevProgress - PROGRESS_STEP));
+  };
+
+  const resetProgress = () => {
+    setProgress(0);
+  };
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.screenContainer}>
+        {/* <Text style={[styles.title, {color: colors.Neutral900}]}>Transitioning Circle Progress</Text> */}
+
+        <TransitioningProgressCircle
+          progress={progress} // Value between 0 and 1
+          progressColor={colors.PrimaryNormal}
+          trackColor={colors.PrimaryLightBackground} 
+          size={150}
+          strokeWidth={8}
+          animationDuration={1000}
+          reduceMotion='never'
+          endIcon={<Feather name="check-circle" size={SIZE * 0.8} color={colors.PrimaryNormal} />}
+        >
+          {/* Optional: Display progress text inside the circle or your own icon */}
+          <Text style={[styles.progressText, {color: colors.Neutral900}]}>
+            {`${Math.round(progress * 100)}%`}
+          </Text>
+        </TransitioningProgressCircle>
+
+        <View style={styles.controlsContainer}>
+          <Button title="Increase (+10%)" onPress={incrementProgress} disabled={progress >= 1} />
+          <View style={styles.spacer} />
+          <Button title="Decrease (-10%)" onPress={decrementProgress} disabled={progress <= 0} />
+          <View style={styles.spacer} />
+          <Button title="Reset" onPress={resetProgress} />
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
+  screenContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 30,
+  },
+  progressText: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#333', // Adjust color as needed
+  },
+  controlsContainer: {
+    marginTop: 40,
+    alignItems: 'center',
+  },
+  spacer: {
+    height: 15,
+  },
+  infoContainer: {
+    marginTop: 20,
+  }
+});
+  ```
+
+## Props
+
+| Prop                | Type                                | Default    | Required | Description                                                                                         |
+| :------------------ | :---------------------------------- | :--------- | :------- | :-------------------------------------------------------------------------------------------------- |
+| `progress`          | `number`                            |            | Yes      | The current progress value, from 0 (empty) to 1 (full).                                           |
+| `progressColor`     | `string`                            |            | Yes      | Color string for the active progress arc.                                                           |
+| `trackColor`        | `string`                            |            | Yes      | Color string for the background track of the circle.                                                |
+| `size`              | `number`                            | `100`      | No       | Diameter of the progress circle in pixels.                                                          |
+| `strokeWidth`       | `number`                            | `8`        | No       | Thickness of the progress and track arcs in pixels.                                                 |
+| `animationDuration` | `number`                            | `1000`     | No       | Duration of the progress animation in milliseconds.                                                 |
+| `children`          | `React.ReactNode`                   |            | No       | Optional content (e.g., text, icon) to display centered within the circle.                        |
+| `endIcon`           | `React.ReactNode`                   |            | No       | The optional icon itself, displayed at the current end/tip of the progress arc.                    |
+| `endIconColor`      | `string`                            |            | No       | Optional color for the `endIcon`. This color might apply to the transitioning icon.                 |
+| `containerStyle`    | `StyleProp<ViewStyle>`              |            | No       | Custom styles applied to the root `View` container that wraps the SVG and children.                 |
+| `reduceMotion`      | `'never' \| 'always' \| 'system'` | `'system'` | No       | Controls if/when animations are disabled based on system accessibility settings or user preference. |
