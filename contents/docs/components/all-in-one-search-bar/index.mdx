@@ -4,9 +4,6 @@ description: An animated search input component that expands on focus to display
 tags: [expo, react-native, search-bar, animation, reanimated, autocomplete, recent-searches, ui-component, input, tanstack, zustand, async-storage]
 ---
 
-<img src="https://cdn.jsdelivr.net/gh/waleedcj/EziuiAssets/eas-update.svg" width={250} height={250}/>
-Scan to view the component
-
   <Stepper>
   <StepperItem title="Step 1: Install Dependencies">
     local storage library available on expo
@@ -276,9 +273,9 @@ const DEBOUNCE_DELAY = 300;
 type AnimatedSearchBarProps = {
 	onSearchSubmit: (term: string) => void;
 	placeholder?: string;
-	searchStartIcon: React.ReactNode;
-	recentSearchStartIcon?: React.ReactNode;
-	recentSearchEndIcon?: React.ReactNode;
+	searchStartIcon: React.ReactElement;
+	recentSearchStartIcon?: React.ReactElement;
+	recentSearchEndIcon?: React.ReactElement;
 	loaderColor?: string;
 	inputTextColor?: string;
 	containerBackgroundColor?: string;

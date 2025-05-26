@@ -1,0 +1,424 @@
+---
+title: Animated Dropdown Picker
+description: A customizable, animated dropdown picker component that allows users to select an item from a list, with support for custom item rendering and controlled open/close state.
+tags: [react-native, dropdown, picker, select, animation, reanimated, ui-component, form-input]
+---
+
+## Installation
+
+  ```typescript:DropdownPicker.tsx
+import React, { useEffect } from "react";
+import {
+	View,
+	TouchableOpacity,
+	Text,
+	FlatList,
+	StyleSheet,
+	StyleProp,
+	ViewStyle,
+	TextStyle,
+	ListRenderItem,
+	useWindowDimensions,
+} from "react-native";
+import Animated, {
+	useSharedValue,
+	useAnimatedStyle,
+	withTiming,
+	Easing,
+	interpolate,
+	Extrapolation,
+	ReduceMotion,
+} from "react-native-reanimated";
+
+const INPUT_HEIGHT = 60;
+
+export type DropdownPickerItem = {
+	id: string | number;
+	label: string;
+	value: any;
+	[key: string]: any;
+}
+
+type DropdownPickerProps<TItem extends DropdownPickerItem> = {
+	isOpen: boolean;
+	setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+	data: TItem[];
+	onItemSelected: (item: TItem) => void;
+    inputHeight?: number;
+	renderItem?: ListRenderItem<TItem>;
+	placeholder?: string;
+	selectedValue?: TItem | null;
+	triggerContainerStyle?: StyleProp<ViewStyle>;
+	triggerTextStyle?: StyleProp<TextStyle>;
+	triggerIcon?: React.ReactElement;
+	dropdownBackgroundColor?: string;
+	dropdownMaxHeight?: number; // User-defined max height for the list itself
+	dropdownItemTextStyle?: StyleProp<TextStyle>;
+	dropdownSeparatorColor?: string;
+	animationDuration?: number;
+	reduceMotion?: "never" | "always" | "system";
+	containerStyle?: StyleProp<ViewStyle>; // Overall container style
+	itemHeight?: number; // Optional: if you know the exact height of each item
+};
+
+const DropdownPicker = <TItem extends DropdownPickerItem>({
+	data,
+	onItemSelected,
+    isOpen,
+    setIsOpen,
+	renderItem,
+	placeholder = "Select an item...",
+	selectedValue,
+	triggerContainerStyle,
+	triggerTextStyle,
+	triggerIcon,
+	dropdownBackgroundColor = "#FFFFFF",
+	dropdownMaxHeight,
+	dropdownItemTextStyle,
+	dropdownSeparatorColor = "#E0E0E0",
+	animationDuration = 300,
+	reduceMotion = "system",
+	containerStyle,
+	itemHeight = 45, // Default estimated item height
+}: DropdownPickerProps<TItem>) => {
+	// const [isOpen, setIsOpen] = useState(false);
+	const animationProgress = useSharedValue(0);
+	const { height: windowHeight, width: windowWidth } = useWindowDimensions();
+	// Calculate default max height for the dropdown list part
+	const defaultListMaxHeight = dropdownMaxHeight || windowHeight * 0.4;
+    // Calculate the actual height the list content would take
+	const listContentActualHeight = data.length * itemHeight;
+    //take the min height this is useful for when the list is small
+	const listVisibleHeight = Math.min(defaultListMaxHeight, listContentActualHeight);
+
+	const motion =
+		reduceMotion === "never"
+			? ReduceMotion.Never
+			: reduceMotion === "always"
+				? ReduceMotion.Always
+				: ReduceMotion.System;
+
+	const TIMING_CONFIG = {
+		duration: animationDuration,
+		easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+		reduceMotion: motion,
+	};
+
+    useEffect(() => {
+        if (isOpen) {
+            // Parent wants to open it
+            animationProgress.value = withTiming(1, TIMING_CONFIG);
+        } else {
+            // Parent wants to close it
+            animationProgress.value = withTiming(0, TIMING_CONFIG);
+        }
+    }, [isOpen, animationProgress, TIMING_CONFIG]); 
+
+	const toggleDropdown = () => {
+        setIsOpen(!isOpen); 
+	};
+
+	const handleItemPress = (item: TItem) => {
+		onItemSelected(item);
+	};
+
+	const animatedOuterContainerStyle = useAnimatedStyle(() => {
+		// The outer container's height animates from INPUT_HEIGHT to INPUT_HEIGHT + listVisibleHeight
+		const height = interpolate(
+			animationProgress.value,
+			[0, 1],
+			[INPUT_HEIGHT, INPUT_HEIGHT + (data.length > 0 ? listVisibleHeight : 0)], // No extra height if no data
+			Extrapolation.CLAMP
+		);
+		return { height };
+	});
+
+	const animatedDropdownContentStyle = useAnimatedStyle(() => {
+		const opacity = interpolate(
+			animationProgress.value,
+			[0, 0.5, 1], // Start fading in a bit later
+			[0, 0, 1],
+			Extrapolation.CLAMP
+		);
+		const translateY = interpolate(
+			animationProgress.value,
+			[0, 1],
+			[-20, 0], // Slide down effect
+			Extrapolation.CLAMP
+		);
+		return { opacity, transform: [{ translateY }] };
+	});
+
+    const animatedIconStyle = useAnimatedStyle(() => {
+        return {
+            transform: [{ rotate: `${interpolate(animationProgress.value, [0, 1], [0, 180])}deg` }],
+        }
+    })
+
+	const defaultRenderItem: ListRenderItem<TItem> = ({ item }) => (
+		<TouchableOpacity style={styles.defaultItemContainer} onPress={() => handleItemPress(item)}>
+			<Text style={[styles.defaultItemText, dropdownItemTextStyle]}>{item.label}</Text>
+		</TouchableOpacity>
+	);
+
+	return (
+		<Animated.View
+			style={[
+				styles.outerContainer,
+				{ width: windowWidth - 32, backgroundColor: dropdownBackgroundColor }, // Background here for the whole area
+				containerStyle,
+				animatedOuterContainerStyle, // Height animation here
+			]}
+		>
+			<TouchableOpacity
+				activeOpacity={0.7}
+				onPress={toggleDropdown}
+				style={[styles.triggerArea, { height: INPUT_HEIGHT }, triggerContainerStyle]}
+			>
+				<Text style={[styles.triggerText, triggerTextStyle]} numberOfLines={1}>
+					{selectedValue ? selectedValue.label : placeholder}
+				</Text>
+				<Animated.View style={animatedIconStyle}>
+					{triggerIcon}
+				</Animated.View>
+			</TouchableOpacity>
+
+			{/* The list part, only rendered when isOpen for performance, animated for visual effect */}
+			{isOpen && data.length > 0 && (
+				<Animated.View style={[styles.listWrapper, animatedDropdownContentStyle]}>
+                    {/* you can replace FlatList with flashlist or legendlist just import and use */}
+					<FlatList
+						data={data}
+						renderItem={renderItem || defaultRenderItem}
+						keyExtractor={(item) => String(item.id)}
+						showsVerticalScrollIndicator={false}
+						keyboardShouldPersistTaps="handled"
+						ItemSeparatorComponent={
+							dropdownSeparatorColor
+								? () => <View style={[styles.separator, { backgroundColor: dropdownSeparatorColor }]} />
+								: () => <></>
+						}
+						style={{ maxHeight: listVisibleHeight }} // Ensure FlatList doesn't exceed calculated visible height
+                        ListEmptyComponent={() => (
+                            <View style={[styles.emptyListContainer, animatedDropdownContentStyle]}>
+                                <Text style={styles.emptyListText}>No items available</Text>
+                            </View>
+                        )}
+					/>
+				</Animated.View>
+			)}
+		</Animated.View>
+	);
+};
+
+const styles = StyleSheet.create({
+	outerContainer: {
+		borderRadius: 8,
+		marginHorizontal: 16,
+		overflow: "hidden",
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.1,
+		shadowRadius: 4,
+		elevation: 5,
+		zIndex: 1,
+	},
+	triggerArea: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "space-between",
+		paddingHorizontal: 12,
+		zIndex: 2,
+	},
+	triggerText: {
+		flex: 1,
+		fontSize: 16,
+		color: "#333",
+		marginRight: 8,
+	},
+	listWrapper: {
+		flex: 1,
+		marginTop: INPUT_HEIGHT,
+		position: "absolute",
+		top: 0,
+		left: 0,
+		right: 0,
+		bottom: 0,
+	},
+	emptyListContainer: {
+		justifyContent: "center",
+		alignItems: "center",
+	},
+	emptyListText: {
+		color: "#888",
+		fontSize: 14,
+	},
+	defaultItemContainer: {
+		paddingVertical: 12,
+		paddingHorizontal: 15,
+	},
+	defaultItemText: {
+		fontSize: 16,
+		color: "#333",
+	},
+	separator: {
+		height: StyleSheet.hairlineWidth,
+		marginHorizontal: 16,
+	},
+});
+
+export default DropdownPicker;
+```
+
+  
+
+## Usage
+
+  ```typescript:DropdownPickerPage.tsx
+import React, { useState } from "react";
+import { View, Text, StyleSheet, SafeAreaView, Alert, ListRenderItem, TouchableOpacity } from "react-native";
+import DropdownPicker, { DropdownPickerItem } from "@/components/ui/DropdownPicker";
+import { useAppColors } from "@/hooks/useAppColors";
+import { Ionicons } from "@expo/vector-icons";
+
+interface MyCustomItem extends DropdownPickerItem {
+	// id, label, value are inherited
+	description?: string;
+}
+
+const sampleData: MyCustomItem[] = [
+	{ id: "1", label: "Toyota", value: "toyota", description: "Reliable Japanese brand" },
+	{ id: "2", label: "Honda", value: "honda", description: "Known for efficiency" },
+	{ id: "3", label: "Ford", value: "ford", description: "American classic" },
+	{ id: "4", label: "BMW", value: "bmw", description: "German luxury" },
+	{ id: "5", label: "Mercedes-Benz", value: "mercedes", description: "Premium engineering" },
+	{ id: "6", label: "Audi", value: "audi", description: "Progressive technology" },
+	{ id: "7", label: "Volkswagen", value: "vw", description: "People's car" },
+	{ id: "8", label: "Chevrolet", value: "chevy", description: "American heritage" },
+	{ id: "9", label: "Hyundai", value: "hyundai", description: "Value-oriented" },
+	{ id: "10", label: "Kia", value: "kia", description: "Modern design" },
+	{ id: "11", label: "Nissan", value: "nissan", description: "Innovation focus" },
+	{ id: "12", label: "Mazda", value: "mazda", description: "Driving dynamics" },
+	{ id: "13", label: "Subaru", value: "subaru", description: "All-wheel specialists" },
+	{ id: "14", label: "Lexus", value: "lexus", description: "Luxury comfort" },
+	{ id: "15", label: "Volvo", value: "volvo", description: "Safety priority" },
+	{ id: "16", label: "Porsche", value: "porsche", description: "Performance heritage" },
+	{ id: "17", label: "Tesla", value: "tesla", description: "Electric innovation" },
+	{ id: "18", label: "Jeep", value: "jeep", description: "Off-road capable" },
+	{ id: "19", label: "Land Rover", value: "landrover", description: "Luxury capability" },
+	{ id: "20", label: "Jaguar", value: "jaguar", description: "British elegance" },
+	{ id: "21", label: "Acura", value: "acura", description: "Premium Japanese" },
+	{ id: "22", label: "Cadillac", value: "cadillac", description: "American luxury" },
+];
+
+export default function DropdownPickerPage() {
+	const colors = useAppColors();
+	const [selectedCar, setSelectedCar] = useState<MyCustomItem | null>(null);
+	const [isPickerOpen, setIsPickerOpen] = useState(false);
+
+	const handleCarSelect = (item: MyCustomItem) => {
+		setSelectedCar(item);
+		setIsPickerOpen(false);
+		Alert.alert("Selected", `ID: ${item.id}, Value: ${item.value}, Label: ${item.label}`);
+	};
+
+	// custom renderItem
+	const renderCustomDropdownItem: ListRenderItem<MyCustomItem> = ({ item }) => (
+		<TouchableOpacity
+			style={styles.customItem}
+			onPress={() => handleCarSelect(item)} // Ensure your custom item handles press
+		>
+			<Ionicons name="car-sport-outline" size={20} color={colors.PrimaryNormal} />
+			<View style={{ marginLeft: 10 }}>
+				<Text style={[styles.customItemLabel, { color: colors.Neutral900 }]}>{item.label}</Text>
+				{item.description && (
+					<Text style={[styles.customItemDesc, { color: colors.Neutral500 }]}>{item.description}</Text>
+				)}
+			</View>
+		</TouchableOpacity>
+	);
+
+	return (
+		<SafeAreaView style={[styles.safeArea, { backgroundColor: colors.bgColor }]}>
+			<View style={styles.container}>
+				<Text style={[styles.title, { color: colors.Neutral900 }]}>Dropdown Picker</Text>
+
+				<DropdownPicker<MyCustomItem> // Specify the item type
+					data={sampleData}
+					isOpen={isPickerOpen}
+					setIsOpen={setIsPickerOpen}
+					onItemSelected={handleCarSelect}
+					selectedValue={selectedCar}
+					placeholder="Select Car Make"
+					renderItem={renderCustomDropdownItem}
+					// Styling Props
+					triggerContainerStyle={{ borderColor: colors.PrimaryNormal, backgroundColor: colors.Neutral0 }}
+					triggerTextStyle={{ color: colors.Neutral700 }}
+					triggerIcon={<Ionicons name="chevron-down-outline" size={24} color={colors.Neutral500} />}
+					reduceMotion="never"
+					dropdownBackgroundColor={colors.Neutral0}
+					dropdownItemTextStyle={{ color: colors.Neutral700 }}
+					dropdownSeparatorColor={colors.Neutral500}
+					containerStyle={{ marginBottom: 20, zIndex: 10 }}
+				/>
+			</View>
+		</SafeAreaView>
+	);
+}
+
+const styles = StyleSheet.create({
+	safeArea: { flex: 1 },
+	container: {
+		flex: 1,
+		padding: 20,
+		alignItems: "center", // Center dropdown for demo
+	},
+	title: {
+		fontSize: 22,
+		fontWeight: "bold",
+		marginBottom: 30,
+	},
+	selectedValueText: {
+		marginTop: 20,
+		fontSize: 16,
+	},
+	// For custom renderItem example
+	customItem: {
+		flexDirection: "row",
+		alignItems: "center",
+		paddingVertical: 12,
+		paddingHorizontal: 16,
+	},
+	customItemLabel: {
+		fontSize: 16,
+		fontWeight: "500",
+	},
+	customItemDesc: {
+		fontSize: 12,
+	},
+});
+  ```
+
+## Props
+
+| Prop                      | Type                                                     | Default                | Required | Description                                                                                                                               |
+| :------------------------ | :------------------------------------------------------- | :--------------------- | :------- | :---------------------------------------------------------------------------------------------------------------------------------------- |
+| `isOpen`                  | `boolean`                                                |                        | Yes      | Controls whether the dropdown list is currently open or closed.                                                                             |
+| `setIsOpen`               | `React.Dispatch<React.SetStateAction<boolean>>`          |                        | Yes      | Function to update the `isOpen` state, typically from a parent component.                                                                 |
+| `data`                    | `TItem[]` (where TItem extends DropdownPickerItem)       |                        | Yes      | An array of item objects to display in the dropdown. Each item must have `id`, `label`, and `value`.                                      |
+| `onItemSelected`          | `(item: TItem) => void`                                  |                        | Yes      | Callback function triggered when an item is selected from the dropdown list.                                                              |
+| `inputHeight`             | `number`                                                 | `60` (INPUT_HEIGHT)    | No       | The height of the touchable trigger area of the dropdown. (Note: `INPUT_HEIGHT` is used in the code, might need to be exposed or consistent) |
+| `renderItem`              | `ListRenderItem<TItem>`                                  |                        | No       | Optional custom function to render each item in the dropdown list. If not provided, a default renderer is used.                           |
+| `placeholder`             | `string`                                                 | `"Select an item..."`  | No       | Placeholder text displayed in the trigger area when no item is selected.                                                                  |
+| `selectedValue`           | `TItem \| null`                                          |                        | No       | The currently selected item object. If provided, its `label` will be displayed in the trigger area.                                       |
+| `triggerContainerStyle`   | `StyleProp<ViewStyle>`                                   |                        | No       | Custom styles applied to the touchable trigger area `TouchableOpacity`.                                                                   |
+| `triggerTextStyle`        | `StyleProp<TextStyle>`                                   |                        | No       | Custom styles applied to the text (`Text`) within the trigger area.                                                                       |
+| `triggerIcon`             | `React.ReactElement`                                     |                        | No       | Optional React Element (e.g., an Icon component) to display as the dropdown arrow/indicator in the trigger area.                        |
+| `dropdownBackgroundColor` | `string`                                                 | `"#FFFFFF"`            | No       | Background color for the entire dropdown component, including the list area.                                                              |
+| `dropdownMaxHeight`       | `number`                                                 | `windowHeight * 0.4`   | No       | Maximum height for the scrollable list of items. Defaults to 40% of the window height.                                                    |
+| `dropdownItemTextStyle`   | `StyleProp<TextStyle>`                                   |                        | No       | Custom styles applied to the text of each item in the dropdown list (used by the default `renderItem`).                                   |
+| `dropdownSeparatorColor`  | `string`                                                 | `"#E0E0E0"`            | No       | Color for the separator line between items in the dropdown list. If not provided, no separator is rendered.                             |
+| `animationDuration`       | `number`                                                 | `300`                  | No       | Duration of the open/close animation in milliseconds.                                                                                     |
+| `reduceMotion`            | `"never" \| "always" \| "system"`                        | `"system"`             | No       | Controls animation behavior: 'never', 'always' (no animation), or 'system' (respects device settings).                                  |
+| `containerStyle`          | `StyleProp<ViewStyle>`                                   |                        | No       | Custom styles applied to the outermost animated `View` container of the dropdown.                                                         |
+| `itemHeight`              | `number`                                                 | `45`                   | No       | Estimated height of a single item in the list, used to calculate the dropdown's animated height.                                        |

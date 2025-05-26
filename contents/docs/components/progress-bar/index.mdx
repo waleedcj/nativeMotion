@@ -1,0 +1,420 @@
+---
+title: Animated Progress Bar
+description: Displays a customizable, animated progress bar with optional text, an icon that moves with the progress, and a configurable gradient fill.
+tags: [react-native, progress-bar, animation, reanimated, ui-component, gradient, visualisation]
+---
+
+## Installation
+
+  ```typescript:AnimatedProgressBar.tsx
+import React, { useEffect } from "react";
+import { View, Text, StyleSheet, StyleProp, ViewStyle, TextStyle, Dimensions } from "react-native";
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, ReduceMotion, Easing } from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
+
+export type ProgressBarProps = {
+	progress: number; // Value between 0 and 1
+  	height: number;
+	width: number;
+	text?: string;
+	icon?: React.ReactElement;
+	iconGap?: number; //if gap is not added icon container is as big as the height of the bar
+	iconContainerColor?: string;
+	animationDuration?: number;
+	reduceMotion?: "never" | "always" | "system";
+	containerStyle?: StyleProp<ViewStyle>;
+	trackColor?: string;
+	textStyle?: StyleProp<TextStyle>;
+	colorAtZeroProgress?: string;
+	colorAtMidProgress?: string;
+	colorAtFullProgress?: string;
+};
+
+const DEFAULT_HEIGHT = 30;
+const DEFAULT_WIDTH = Dimensions.get("window").width * 0.8;
+
+export default function AnimatedProgressBar({
+	progress,
+	text,
+	icon,
+	iconGap = 4,
+	iconContainerColor = "#FFFFFF33",
+	height = DEFAULT_HEIGHT,
+	width = DEFAULT_WIDTH,
+	animationDuration = 700,
+	reduceMotion = "system",
+	containerStyle,
+	trackColor = "#E0E0E0",
+	textStyle,
+	colorAtZeroProgress = "#FF6B6B",
+	colorAtMidProgress = "#FFA500",
+	colorAtFullProgress = "#4CAF50",
+}: ProgressBarProps) {
+	const progressValue = useSharedValue(0);
+	const barBorderRadius = height ?? DEFAULT_HEIGHT / 2;
+	const iconContainerSize = height - iconGap;
+
+	const motion =
+		reduceMotion === "never"
+			? ReduceMotion.Never
+			: reduceMotion === "always"
+				? ReduceMotion.Always
+				: ReduceMotion.System;
+
+	useEffect(() => {
+		const clampedProgress = Math.max(0, Math.min(1, progress));
+		progressValue.value = withTiming(clampedProgress, {
+			duration: animationDuration,
+			easing: Easing.out(Easing.quad),
+			reduceMotion: motion,
+		});
+	}, [progress]);
+
+	const animatedProgressFillStyle = useAnimatedStyle(() => {
+		return {
+			width: progressValue.value * width,
+		};
+	});
+
+	const sliderHandleStyle = useAnimatedStyle(() => {
+		return {
+			transform: [{ translateX: progressValue.value * width - iconContainerSize - iconGap }],
+		};
+	});
+
+	return (
+		<View
+			style={[
+				styles.container,
+				{ width: width, height: height, borderRadius: barBorderRadius, backgroundColor: trackColor },
+				containerStyle,
+			]}
+		>
+			<Animated.View style={[styles.progressFillContainer, animatedProgressFillStyle]}>
+				<LinearGradient
+					colors={[colorAtZeroProgress, colorAtMidProgress, colorAtFullProgress]}
+					style={[styles.gradientFill, { borderRadius: barBorderRadius }]}
+					start={{ x: 0, y: 0.5 }}
+					end={{ x: 1, y: 0.5 }}
+				/>
+			</Animated.View>
+
+			{text && (
+				<View style={styles.textContainer}>
+					<Text style={[styles.text, textStyle]}>{text}</Text>
+				</View>
+			)}
+			{icon && (
+				<Animated.View
+					style={[
+						styles.iconOuterContainer,
+						{
+							height: iconContainerSize,
+							width: iconContainerSize,
+							borderRadius: iconContainerSize / 2,
+							backgroundColor: iconContainerColor,
+						},
+						sliderHandleStyle,
+					]}
+				>
+					<View style={[styles.iconInnerContainer]}>{icon}</View>
+				</Animated.View>
+			)}
+		</View>
+	);
+}
+
+const styles = StyleSheet.create({
+	container: {
+		overflow: "hidden",
+		justifyContent: "center",
+	},
+	progressFillContainer: {
+		// New container for the gradient, its width is animated
+		height: "100%",
+		position: "absolute",
+		left: 0,
+	},
+	gradientFill: {
+		// The LinearGradient fills its animated container
+		...StyleSheet.absoluteFillObject,
+	},
+	textContainer: {
+		...StyleSheet.absoluteFillObject,
+		justifyContent: "center",
+		alignItems: "center",
+	},
+	text: {
+		color: "#FFFFFF",
+		fontWeight: "600",
+		fontSize: 12,
+	},
+	iconOuterContainer: {
+		position: "absolute",
+		justifyContent: "center",
+		alignItems: "center",
+	},
+	iconInnerContainer: {
+		justifyContent: "center",
+		alignItems: "center",
+	},
+});
+```
+
+  
+
+## Usage
+
+  ```typescript:DropdownPickerPage.tsx
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, Button, StyleSheet, SafeAreaView, ScrollView, Platform, Dimensions } from 'react-native';
+import AnimatedProgressBar from '@/components/ui/ProgressBar'; // Adjust path
+import { useAppColors } from '@/hooks/useAppColors';
+import { Ionicons } from '@expo/vector-icons';
+
+export default function ProgressBarPage() {
+  const colors = useAppColors();
+
+  // State for "Level Progress"
+  const [levelProgress, setLevelProgress] = useState(0.2);
+  const [levelData, setLevelData] = useState({ currentLevel: 1, currentXP: 200, xpToNextLevel: 1000 });
+
+  // State for "Questions Answered"
+  const [questionsAnswered, setQuestionsAnswered] = useState(3);
+  const totalQuestions = 10;
+
+  // State for "Auto-Incrementing Bar"
+  const [autoProgress, setAutoProgress] = useState(0);
+  const autoIncrementIntervalRef = useRef<number | null>(null); // Corrected type for React Native
+
+  // Update Level Progress text based on levelData
+  useEffect(() => {
+    const progressForLevel = levelData.xpToNextLevel > 0 ? levelData.currentXP / levelData.xpToNextLevel : 0;
+    setLevelProgress(progressForLevel);
+  }, [levelData]);
+
+
+  // Handlers for Level Progress Bar
+  const addXP = (amount: number) => {
+    setLevelData(prev => {
+      let newXP = prev.currentXP + amount;
+      let newLevel = prev.currentLevel;
+      let newXPToNext = prev.xpToNextLevel;
+
+      if (newXP >= newXPToNext) {
+        newLevel++;
+        newXP = newXP - newXPToNext; // Carry over
+        newXPToNext = Math.floor(newXPToNext * 1.5); // Increase requirement for next level
+      }
+      return { currentLevel: newLevel, currentXP: newXP, xpToNextLevel: newXPToNext };
+    });
+  };
+
+
+  // Handler for Questions Bar
+  const answerQuestion = () => {
+    setQuestionsAnswered((prev) => Math.min(totalQuestions, prev + 1));
+  };
+
+  // Handlers for Auto-Increment Bar 
+  const startAutoIncrement = () => {
+    if (autoIncrementIntervalRef.current) {
+        clearInterval(autoIncrementIntervalRef.current);
+        autoIncrementIntervalRef.current = null; // Clear ref
+    }
+    // Reset progress if it's already full or if starting fresh
+    if (autoProgress >= 1 || autoIncrementIntervalRef.current === null) {
+        setAutoProgress(0.001); // Start slightly above 0 to trigger animation
+    }
+
+
+    autoIncrementIntervalRef.current = setInterval(() => {
+      setAutoProgress((prev) => {
+        if (prev >= 1) {
+          if (autoIncrementIntervalRef.current) clearInterval(autoIncrementIntervalRef.current);
+          autoIncrementIntervalRef.current = null;
+          return 1;
+        }
+        return Math.min(1, prev + 0.02); // Increment by 2%
+      });
+    }, 100); // Update every 100ms
+  };
+
+  const stopAutoIncrement = () => {
+    if (autoIncrementIntervalRef.current) {
+      clearInterval(autoIncrementIntervalRef.current);
+      autoIncrementIntervalRef.current = null;
+    }
+  };
+
+  const toggleAutoIncrement = () => {
+    if (autoIncrementIntervalRef.current) {
+        stopAutoIncrement();
+    } else {
+        startAutoIncrement();
+    }
+  }
+
+  useEffect(() => {
+    return () => { // Cleanup interval on component unmount
+      if (autoIncrementIntervalRef.current) {
+        clearInterval(autoIncrementIntervalRef.current);
+      }
+    };
+  }, []);
+
+  // Generic Reset Function
+  const resetAllProgressBars = () => {
+    // Reset Level Progress Bar
+    setLevelData({ currentLevel: 1, currentXP: 0, xpToNextLevel: 1000 });
+    // setLevelProgress will update via useEffect
+    // Reset Questions Answered
+    setQuestionsAnswered(0);
+    // Reset Auto-Increment Bar and stop interval
+    stopAutoIncrement();
+    setAutoProgress(0);
+  };
+
+
+  return (
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.bgColor }]}>
+      <ScrollView contentContainerStyle={styles.screenContainer} keyboardShouldPersistTaps="handled">
+        <Text style={[styles.title, { color: colors.Neutral900 }]}>Progress Bars</Text>
+
+        {/* 1. Level Progress Bar (Dynamic Gradient based on overall progress) */}
+        <View style={styles.progressBarSection}>
+          <Text style={[styles.barTitle, {color: colors.Neutral700}]}>
+            Level {levelData.currentLevel} Progress
+          </Text>
+          <AnimatedProgressBar
+            progress={levelProgress} // This comes from useEffect [levelData]
+            text={`${levelData.currentXP} / ${levelData.xpToNextLevel} XP`}
+            icon={<Ionicons name='star-outline' size={18} color={colors.AuxColorTwo} />}
+            iconContainerColor={colors.Neutral0}
+            height={40}
+            width={Dimensions.get("window").width * 0.9} //using this is better than % basically this is 90% 
+            trackColor={colors.Neutral90}
+            textStyle={{ color: colors.Neutral900, fontWeight: 'bold', fontSize: 12 }}
+            reduceMotion='never'
+            animationDuration={700}
+            colorAtZeroProgress={colors.AuxColorThree}
+            colorAtMidProgress={colors.AuxColorThree}
+            colorAtFullProgress={colors.AuxColorThree}
+          />
+           <View style={styles.controlsRow}>
+            <Button title="-50 XP" onPress={() => addXP(-50)} disabled={levelData.currentXP <=0 && levelData.currentLevel === 1}/>
+            <View style={styles.buttonSpacer} />
+            <Button title="+99 XP" onPress={() => addXP(99)}/>
+          </View>
+        </View>
+
+        {/* 2. Questions Answered (out of 10) */}
+        <View style={styles.progressBarSection}>
+          <Text style={[styles.barTitle, {color: colors.Neutral700}]}>Quiz Progress</Text>
+          <AnimatedProgressBar
+            progress={totalQuestions > 0 ? questionsAnswered / totalQuestions : 0}
+            text={`${questionsAnswered} / ${totalQuestions} Answered`}
+            icon={<Ionicons name='checkmark-done-circle-outline' size={20} color={colors.Neutral0} />}
+            iconContainerColor={colors.Neutral700}
+            height={35}
+            width={Dimensions.get("window").width * 0.9}
+            trackColor={colors.Neutral70}
+            textStyle={{ color: colors.Neutral0, fontWeight: 'bold', fontSize: 11 }}
+            reduceMotion='never'
+            colorAtZeroProgress={colors.SuccessfulNormal}
+            colorAtMidProgress={colors.SuccessfulNormal}
+            colorAtFullProgress={colors.SuccessfulNormal}
+          />
+          <View style={styles.controlsRow}>
+            <Button title="Answer One" onPress={answerQuestion} disabled={questionsAnswered >= totalQuestions}/>
+          </View>
+        </View>
+
+        {/* 3. Auto-Incrementing Bar */}
+        <View style={styles.progressBarSection}>
+          <Text style={[styles.barTitle, {color: colors.Neutral700}]}>System Update</Text>
+          <AnimatedProgressBar
+            progress={autoProgress}
+            text={autoProgress >= 1 ? "Update Complete!" : `Updating... ${Math.round(autoProgress*100)}%`}
+            icon={<Ionicons name='sync-circle-outline' size={18} color={colors.Neutral0} />}
+            iconContainerColor={autoProgress >= 1 ? colors.SuccessfulNormal : colors.AuxColorTwo}
+            height={30}
+            width={Dimensions.get("window").width * 0.9}
+            trackColor={colors.Neutral90}
+            textStyle={{ color: colors.Neutral0, fontWeight: '500', fontSize: 10 }}
+              reduceMotion='never'
+          />
+          <View style={styles.controlsRow}>
+            <Button 
+                title={autoIncrementIntervalRef.current ? "Pause Update" : (autoProgress >=1 ? "Restart Update" : "Start Update")} 
+                onPress={toggleAutoIncrement} 
+            />
+          </View>
+        </View>
+        
+        <View style={styles.mainControlsContainer}>
+          <Button title="Reset All Progress" onPress={resetAllProgressBars} />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
+  screenContainer: {
+    alignItems: 'center',
+    paddingVertical: 30,
+    paddingHorizontal: 15,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 30,
+    textAlign: 'center',
+  },
+  progressBarSection: {
+    width: '100%',
+    marginBottom: 40,
+    alignItems: 'center',
+  },
+  barTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 12,
+  },
+  controlsRow: {
+    flexDirection: 'row',
+    marginTop: 15,
+  },
+  buttonSpacer: {
+    width: 10,
+  },
+  mainControlsContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+});
+  ```
+
+## Props
+
+| Prop                   | Type                                | Default                                     | Required | Description                                                                                                |
+| :--------------------- | :---------------------------------- | :------------------------------------------ | :------- | :--------------------------------------------------------------------------------------------------------- |
+| `progress`             | `number`                            |                                             | Yes      | The progress value, a number between 0 (0%) and 1 (100%).                                                  |
+| `height`               | `number`                            | `30`                                        | No       | The height of the progress bar.                                                                            |
+| `width`                | `number`                            | `Dimensions.get("window").width * 0.8`      | No       | The width of the progress bar.                                                                             |
+| `text`                 | `string`                            |                                             | No       | Optional text to display centered within the progress bar.                                                 |
+| `icon`                 | `React.ReactElement`                |                                             | No       | Optional React Element (e.g., an Icon component) to display, which moves along with the progress.        |
+| `iconGap`              | `number`                            | `4`                                         | No       | The gap between the edge of the progress bar and the icon container. Affects icon container size.          |
+| `iconContainerColor`   | `string`                            | `"#FFFFFF33"`                               | No       | Background color for the container that wraps the `icon`.                                                  |
+| `animationDuration`    | `number`                            | `700`                                       | No       | Duration of the progress animation in milliseconds.                                                        |
+| `reduceMotion`         | `"never" \| "always" \| "system"`   | `"system"`                                  | No       | Controls animation behavior: 'never', 'always' (no animation), or 'system' (respects device settings).   |
+| `containerStyle`       | `StyleProp<ViewStyle>`              |                                             | No       | Custom styles to apply to the main container `View` of the progress bar.                                   |
+| `trackColor`           | `string`                            | `"#E0E0E0"`                                 | No       | The background color of the progress bar track (the area behind the fill).                                 |
+| `textStyle`            | `StyleProp<TextStyle>`              |                                             | No       | Custom styles to apply to the `text` displayed within the progress bar.                                    |
+| `colorAtZeroProgress`  | `string`                            | `"#FF6B6B"`                                 | No       | The start color of the linear gradient fill when progress is at or near 0.                               |
+| `colorAtMidProgress`   | `string`                            | `"#FFA500"`                                 | No       | The middle color of the linear gradient fill.                                                              |
+| `colorAtFullProgress`  | `string`                            | `"#4CAF50"`                                 | No       | The end color of the linear gradient fill when progress is at or near 1.                                 |
