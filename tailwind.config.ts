@@ -103,6 +103,8 @@ const config = {
 				jakarta: ["var(--font-jakarta-sans)"], // <--- ADD THIS LINE
 
 				code: ["var(--font-geist-mono)"],
+
+				anybody: ["var(--font-anybody)"],
 			},
 			backgroundImage: {
 				"grid-pattern": "var(--gradient)",

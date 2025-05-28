@@ -66,7 +66,7 @@ export const ROUTES: EachRoute[] = [
     href: "/screens",
     noLink: true,
     items: [
-      // {title: "Animated Header", href: "/animated-header"},
+      {title: "Dynamic Credit Card Form", href: "/card-info-animated-form"},
     ]
   },
 ];

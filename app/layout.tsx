@@ -32,10 +32,10 @@ const space = Space_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Eziui",
-  metadataBase: new URL("https://eziui.com"),
+  title: "Native Motion",
+  metadataBase: new URL("https://nativemotion.dev"),
   description:
-  "A modern UI component library and design system for React Native.",
+  "Copy Paste modern UI components and design systems for React Native.",
 
 };
 
@@ -63,8 +63,6 @@ export default function RootLayout({
           // enableSystem
           disableTransitionOnChange
         >
-  
-
           <div className="relative z-0 flex min-h-screen flex-col">
             <Navbar />
             <main className="flex-grow sm:container mx-auto w-[90vw] h-auto scroll-smooth">

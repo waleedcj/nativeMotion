@@ -38,7 +38,7 @@ export function QrCode() {
   }, [isModalOpen, closeModal]);
 
     // Show only on /docs/components or any subroute
-    if (!pathname.startsWith("/docs/components")) {
+    if (!pathname.startsWith("/docs/components") && !pathname.startsWith("/docs/screens")) {
         return null;
       }
 
@@ -104,7 +104,7 @@ export function QrCode() {
             {/* QR Code Image */}
             <div className="bg-white p-2 sm:p-3 rounded-md inline-block shadow-md">
               <Image
-                src={'https://cdn.jsdelivr.net/gh/waleedcj/EziuiAssets/eas-update.svg'}
+                src={'https://cdn.jsdelivr.net/gh/waleedcj/EziuiAssets@main/eas-update.svg'}
                 alt="Expo Go QR Code"
                 width={220} // Adjust to the natural width of your QR image or desired display width
                 height={220} // Adjust to the natural height of your QR image or desired display height

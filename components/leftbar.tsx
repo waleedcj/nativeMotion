@@ -5,13 +5,14 @@ import {
   SheetHeader,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Logo, NavMenu } from "./navbar";
+import { NavMenu } from "./navbar";
 import { Button } from "./ui/button";
 import { AlignLeftIcon } from "lucide-react";
 // import { FooterButtons } from "./footer";
 import { DialogTitle } from "./ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import DocsMenu from "./docs-menu";
+import { LogoToggle } from "./toggle-logo";
 
 export function Leftbar() {
   return (
@@ -35,7 +36,7 @@ export function SheetLeftbar() {
         <DialogTitle className="sr-only">Menu</DialogTitle>
         <SheetHeader>
           <SheetClose className="px-5" asChild>
-            <Logo />
+            <LogoToggle />
           </SheetClose>
         </SheetHeader>
         <div className="flex flex-col gap-4 overflow-y-auto">

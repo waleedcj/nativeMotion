@@ -4,9 +4,6 @@ description:  TextInput with a label and animated border that smoothly transitio
 tags: [react-native, textinput, form, animation, reanimated, ui-component, input, validation]
 ---
 
-
-
-
 ## Installation
 
   ```typescript:SmoothBorderTextInput.tsx
@@ -28,25 +25,22 @@ import Animated, {
 	ReduceMotion,
 } from "react-native-reanimated";
 import { useRef } from "react";
-import { useAppColors } from '@/hooks/useAppColors';
 const DEFAULT_INPUT_HEIGHT = 50; //you can change this according to your liking
 
 type SmoothBorderTextInputProps = {
 	containerStyle?: StyleProp<ViewStyle>;
-	backgroundColor: string;
+	backgroundColor?: string;
 	label: string;
+	labelColor: string; // label color which is the top
+	valueColor: string; // input value color
+	isFocusBorderColor: string; // border color while editing
+	isBlurBorderColor: string; //border color when there is no text value
+	isBlurValueBorderColor: string; //border color when you finish entering the text
 	startIcon?: React.ReactElement;
 	isError?: boolean;
 	errorMessage?: string;
-	isFocusLabelColor?: string;
-	isBlurLabelColor?: string;
-	isFocusBorderColor?: string;
-	isBlurBorderColor?: string;
-	isBlurValueBorderColor?: string;
 	reduceMotion?: "never" | "always" | "system";
 };
-
-
 
 export default function SmoothBorderTextInput(
 	props: React.JSX.IntrinsicAttributes &
@@ -55,7 +49,6 @@ export default function SmoothBorderTextInput(
 		SmoothBorderTextInputProps
 ) {
 	const inputRef = useRef<TextInput>(null);
-	const colors = useAppColors();
 
 	// Animation value for the floating label
 	const animatedValue = useSharedValue(0);
@@ -92,20 +85,20 @@ export default function SmoothBorderTextInput(
 
 		if (props.isError) {
 			// Error state - always red regardless of focus
-			fromColor = colors.ErrorNormal;
-			toColor = colors.ErrorNormal;
+			fromColor = "#F65936";
+			toColor = "#F65936";
 		} else {
 			// No error state - handle normal cases
 			if (props.value) {
 				// Has value
-				fromColor = props.isBlurValueBorderColor ?? colors.Neutral500;
+				fromColor = props?.isBlurValueBorderColor;
 			} else {
 				// No value
-				fromColor = props.isBlurBorderColor ?? colors.Neutral100;
+				fromColor = props?.isBlurBorderColor;
 			}
 
 			// Focus color is always the same
-			toColor = props.isFocusBorderColor ?? colors.PrimaryNormal;
+			toColor = props.isFocusBorderColor;
 		}
 
 		return {
@@ -120,7 +113,7 @@ export default function SmoothBorderTextInput(
 
 	return (
 		<View style={{ marginBottom: 16 }}>
-			<Text style={[styles.label, { color: colors.Neutral500 }]}>
+			<Text style={[styles.label, { color: props?.labelColor}]}>
 				{props?.label}
 			</Text>
 			<Animated.View
@@ -142,7 +135,7 @@ export default function SmoothBorderTextInput(
 					style={[
 						styles.input,
 						{
-							color: colors.Neutral700,
+							color: props?.valueColor,
 						},
 						props?.style,
 					]}
@@ -152,7 +145,7 @@ export default function SmoothBorderTextInput(
 				/>
 			</Animated.View>
 			{props?.isError && (
-				<Text style={[styles.errorText, { color: colors.ErrorNormal }]}>
+				<Text style={[styles.errorText, { color: "#F65936" }]}>
 					{props?.errorMessage}
 				</Text>
 			)}
@@ -193,8 +186,6 @@ const styles = StyleSheet.create({
 });
 ```
 
-  
-
 ## Usage
 
   ```typescript
@@ -219,7 +210,11 @@ const App = () => {
           value={inputValue}
           onChangeText={setInputValue}
           placeholder="e.g., Jane Doe"
-          backgroundColor={colors.Neutral50}
+          labelColor={colors.Neutral500}
+          valueColor={colors.Neutral700}
+          isFocusBorderColor={colors.PrimaryNormal}
+          isBlurBorderColor={colors.Neutral100}
+          isBlurValueBorderColor={colors.SuccessfulNormal}
         />
 
         <Text style={[styles.displayValue, { color: colors.Neutral700 }]}>
@@ -257,18 +252,18 @@ export default App;
 
 ## Props
 
-| Prop                     | Type                                    | Default                             | Required | Description                                                                       |
-| :----------------------- | :-------------------------------------- | :---------------------------------- | :------- | :-------------------------------------------------------------------------------- |
-| `label`                  | `string`                                |                                     | Yes      | Text label displayed above the input.                                             |
-| `backgroundColor`        | `string`                                |                                     | Yes      | Background color for the input container.                                         |
-| `containerStyle`         | `StyleProp<ViewStyle>`                  |                                     | No       | Custom styles for the main input wrapper.                                         |
-| `startIcon`              | `React.ReactNode`                       |                                     | No       | Optional icon displayed at the start (left) of the input.                         |
-| `isError`                | `boolean`                               | `false`                             | No       | If `true`, enables error state styling and shows `errorMessage`.                  |
-| `errorMessage`           | `string`                                |                                     | No       | Error message text displayed below when `isError` is true.                        |
-| `isFocusBorderColor`     | `string`                                | `colors.PrimaryNormal` (theme)    | No       | Border color on focus (no error). Defaults to theme primary.                      |
-| `isBlurBorderColor`      | `string`                                | `colors.Neutral100` (theme)     | No       | Border color on blur with no value (no error). Defaults to theme neutral.         |
-| `isBlurValueBorderColor` | `string`                                | `colors.Neutral500` (theme)     | No       | Border color on blur with value (no error). Defaults to theme neutral.            |
-| `isFocusLabelColor`      | `string`                                |                                     | No       | *Not currently used.* Intended for focused label color.                         |
-| `isBlurLabelColor`       | `string`                                |                                     | No       | *Not currently used.* Intended for blurred label color.                         |
-| `reduceMotion`           | `"never" \| "always" \| "system"`       | `"system"`                          | No       | Controls animation behavior for accessibility.                                    |
-| `...props (TextInput)`   | `TextInputProps`                        |                                     | Varies   | Inherits standard React Native `TextInput` props.                                 |
+| Prop                     | Type                                | Default        | Required | Description                                                                 |
+| :----------------------- | :---------------------------------- | :------------- | :------- | :-------------------------------------------------------------------------- |
+| `label`                  | `string`                            |                | Yes      | The text to display as a label above the input field.                       |
+| `labelColor`             | `string`                            |                | Yes      | Color of the label text.                                                    |
+| `valueColor`             | `string`                            |                | Yes      | Color of the text entered into the input field.                             |
+| `isFocusBorderColor`     | `string`                            |                | Yes      | Border color of the input field when it is focused (being edited).          |
+| `isBlurBorderColor`      | `string`                            |                | Yes      | Border color when the input is not focused and has no text value.           |
+| `isBlurValueBorderColor` | `string`                            |                | Yes      | Border color when the input is not focused but has a text value.            |
+| `containerStyle`         | `StyleProp<ViewStyle>`              |                | No       | Custom styles for the main container wrapping the input and icon.           |
+| `backgroundColor`        | `string`                            | `'transparent'`| No       | Background color for the input field's container.                           |
+| `startIcon`              | `React.ReactElement`                |                | No       | An optional icon component to display at the beginning of the input field.  |
+| `isError`                | `boolean`                           | `false`        | No       | If true, displays the input in an error state (e.g., red border).           |
+| `errorMessage`           | `string`                            |                | No       | An error message to display below the input when `isError` is true.         |
+| `reduceMotion`           | `'never' \| 'always' \| 'system'` | `'system'`     | No       | Controls animation behavior (border color transition).                    |
+| `...props`               | `TextInputProps`                    |                | Varies   | Inherits all other props from the standard React Native `TextInput`.        |
