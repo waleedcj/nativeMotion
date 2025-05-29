@@ -146,10 +146,11 @@ export default function CardDetailsFormPage() {
 	const handleChange = (field: FormField, value: string) => {
 		// Format card number with spaces
 		if (field === "cardNumber") {
-			value = value
-				.replace(/\s/g, "")
-				.replace(/(.{4})/g, "$1 ")
-				.trim();
+            value = value
+                .replace(/[^0-9]/g, "")
+                .replace(/\s/g, "")
+                .replace(/(.{4})/g, "$1 ")
+                .trim();
 		}
 
 		// Format expiry date with slash

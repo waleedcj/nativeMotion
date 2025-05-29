@@ -4,9 +4,6 @@ description:  TextInput with a label that animates to float above when focused o
 tags: [reanimated, textinput, animation, form, floating, label]
 ---
 
-
-
-
 ## Installation
 
   ```typescript:FloatingTextInput.tsx
@@ -29,7 +26,6 @@ import {
 	ReduceMotion,
   } from "react-native-reanimated";
   import { useRef, useState, useMemo } from "react";
-  import { useAppColors } from "@/hooks/useAppColors";
   
   // These should ideally match your StyleSheet to avoid magic numbers
   const DEFAULT_INPUT_HEIGHT = 50; //you can change this according to your liking
@@ -41,11 +37,12 @@ import {
 	startIcon?: React.ReactElement;
 	backgroundColor: string;
 	label: string;
-	isFocusLabelColor?: string;
-	isBlurLabelColor?: string;
-	isFocusBorderColor?: string;
-	isBlurBorderColor?: string;
-	isBlurValueBorderColor?: string;
+	valueColor: string
+	isFocusLabelColor: string; //placeholder color after focus
+	isBlurLabelColor: string;  //placeholder color before foucs/touching
+	isFocusBorderColor: string; //border color after focusing
+	isBlurBorderColor: string; //border color before focus/touch
+	isBlurValueBorderColor: string; //border color after editing value
 	isError?: boolean;
 	errorMessage?: string;
 	reduceMotion?: "never" | "always" | "system";
@@ -59,7 +56,6 @@ import {
   ) {
 	const [isFocused, setIsFocused] = useState(false);
 	const inputRef = useRef<TextInput>(null);
-	const colors = useAppColors();
 	const animatedValue = useSharedValue(0);
 	const motion =
 	  props?.reduceMotion === "never"
@@ -113,15 +109,15 @@ import {
   
 	const getBorderColor = () => {
 	  if (props.isError) {
-		return colors.ErrorNormal;
+		return "#F65936";
 	  }
 	  if (isFocused) {
-		return props.isFocusBorderColor ?? colors.PrimaryNormal;
+		return props.isFocusBorderColor;
 	  }
 	  if (props.value) {
-		return props.isBlurValueBorderColor ?? colors.Neutral500;
+		return props.isBlurValueBorderColor;
 	  }
-	  return props.isBlurBorderColor ?? colors.Neutral100;
+	  return props.isBlurBorderColor;
 	};
   
 	const labelStyle = useAnimatedStyle(() => {
@@ -145,8 +141,8 @@ import {
 		  animatedValue.value,
 		  [0, 1],
 		  [
-			props.isBlurLabelColor ?? colors.Neutral300,
-			props.isFocusLabelColor ?? colors.Neutral500,
+			props.isBlurLabelColor,
+			props.isFocusLabelColor
 		  ]
 		),
 	  };
@@ -176,7 +172,7 @@ import {
 			  {
 				// Apply dynamic height and other styles
 				height: inputHeight, 
-				color: colors.Neutral700,
+				color: props.valueColor,
 				backgroundColor: props?.backgroundColor ?? "transparent",
 				borderColor: getBorderColor(),
 			  },
@@ -188,7 +184,7 @@ import {
 		  />
 		</View>
 		{props?.isError && (
-		  <Text style={[styles.errorText, { color: colors.ErrorNormal }]}>
+		  <Text style={[styles.errorText, { color: "#F65936" }]}>
 			{props?.errorMessage}
 		  </Text>
 		)}
@@ -267,8 +263,14 @@ export default function App() {
         <FloatingTextInput
         label="Password"
         value={password}
+		valueColor={colors.Neutral700}
         onChangeText={handlePasswordChange} 
         backgroundColor={colors.background}
+		isFocusBorderColor={colors.PrimaryNormal}
+		isBlurLabelColor={colors.Neutral500}
+		isFocusLabelColor={colors.PrimaryNormal}
+		isBlurBorderColor={colors.Neutral100}
+		isBlurValueBorderColor={colors.Neutral300}
         secureTextEntry={!showPassword}
         clearButtonMode="never"
         isError={passwordError}
@@ -301,17 +303,20 @@ export default function App() {
   ```
 
 ## Props
-| Prop                     | Type                                        | Default     | Required | Description                                                                                                                            |
-| ------------------------ | ------------------------------------------- | ----------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `... (TextInput Props)`  | `TextInputProps`                            |             | No       | Accepts all standard React Native TextInput props (like `value`, `onChangeText`, `keyboardType`, `style`, etc.) passed to the underlying TextInput. |
-| `label`                  | `string`                                    |             | Yes      | The text content for the floating label.                                                                                               |
-| `backgroundColor`        | `string`                                    |             | Yes      | Background for input and label notch area.                                                                                             |
-| `containerStyle`         | `StyleProp<ViewStyle>`                      |             | No       | Style for the inner view wrapping label/input.                                                                                         |
-| `isFocusLabelColor`      | `string`                                    |             | No       | Label color override when input is focused.                                                                                            |
-| `isBlurLabelColor`       | `string`                                    |             | No       | Label color override when blurred & empty.                                                                                             |
-| `isFocusBorderColor`     | `string`                                    |             | No       | Border color override when input is focused.                                                                                           |
-| `isBlurBorderColor`      | `string`                                    |             | No       | Border color override when blurred & empty.                                                                                            |
-| `isBlurValueBorderColor` | `string`                                    |             | No       | Border color override when blurred with value.                                                                                         |
-| `isError`                | `boolean`                                   | `false`     | No       | Applies error styling (border) if true.                                                                                                |
-| `errorMessage`           | `string`                                    |             | No       | Error message text shown below on error.                                                                                               |
-| `reduceMotion`           | `'never' \| 'always' \| 'system'`           | `'system'`  | No       | Controls animation respecting system settings.                                                                                         |
+
+| Prop                     | Type                                | Default    | Required | Description                                                                      |
+| :----------------------- | :---------------------------------- | :--------- | :------- | :------------------------------------------------------------------------------- |
+| `containerStyle`         | `StyleProp<ViewStyle>`              |            | No       | Custom styles for the outermost `View` wrapping the input and label.             |
+| `startIcon`              | `React.ReactElement`                |            | No       | An icon element to display (not implemented in current rendering logic).         |
+| `backgroundColor`        | `string`                            |            | Yes      | Background color for the input field and the "notch" area of the label.          |
+| `label`                  | `string`                            |            | Yes      | The text content for the floating label.                                         |
+| `valueColor`             | `string`                            |            | Yes      | Color of the text entered into the input field.                                  |
+| `isFocusLabelColor`      | `string`                            |            | Yes      | Color of the label text when the input is focused.                               |
+| `isBlurLabelColor`       | `string`                            |            | Yes      | Color of the label text when the input is blurred and empty.                     |
+| `isFocusBorderColor`     | `string`                            |            | Yes      | Border color of the input field when it is focused.                              |
+| `isBlurBorderColor`      | `string`                            |            | Yes      | Border color of the input field when it is blurred and empty.                    |
+| `isBlurValueBorderColor` | `string`                            |            | Yes      | Border color of the input field when it is blurred and contains a value.         |
+| `isError`                | `boolean`                           | `false`    | No       | If true, displays the input in an error state (e.g., red border, error message). |
+| `errorMessage`           | `string`                            |            | No       | The error message text to display when `isError` is true.                        |
+| `reduceMotion`           | `'never' \| 'always' \| 'system'` | `'system'` | No       | Controls animation behavior for label movement.                                  |
+| `...TextInputProps`      | `TextInputProps`                    |            | Varies   | All other standard React Native `TextInput` props (e.g., `value`, `onChangeText`). |

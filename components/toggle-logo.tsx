@@ -17,16 +17,7 @@ export function LogoToggle() {
           width={40} 
           src="/logo.svg"
           alt={`${brandName} Logo Visual Light Mode`}
-          className="h-8 w-auto object-contain block dark:hidden" 
-        />
-        {/* Dark Mode Logo */}
-        <Image
-          height={40} 
-          width={40}  
-          src="/logo.svg"
-          alt={`${brandName} Logo Visual Dark Mode`}
-          className="h-8 w-auto hidden object-contain dark:block" 
-          // priority  //LCP
+          className="h-8 w-auto object-contain block" 
         />
       </div>
 

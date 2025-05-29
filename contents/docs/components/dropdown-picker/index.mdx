@@ -6,6 +6,15 @@ tags: [react-native, dropdown, picker, select, animation, reanimated, ui-compone
 
 ## Installation
 
+  <Stepper>
+  <StepperItem title="Step 1: Install Dependencies">
+    ```plaintext
+    npx expo install @expo/vector-icons/Ionicons
+    ```
+  </StepperItem>
+
+  <StepperItem title="Step 2: Create and copy DropdownPicker.tsx">
+
   ```typescript:DropdownPicker.tsx
 import React, { useEffect } from "react";
 import {
@@ -270,7 +279,9 @@ const styles = StyleSheet.create({
 export default DropdownPicker;
 ```
 
-  
+  </StepperItem>
+
+</Stepper>
 
 ## Usage
 
@@ -279,7 +290,7 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, SafeAreaView, Alert, ListRenderItem, TouchableOpacity } from "react-native";
 import DropdownPicker, { DropdownPickerItem } from "@/components/ui/DropdownPicker";
 import { useAppColors } from "@/hooks/useAppColors";
-import { Ionicons } from "@expo/vector-icons";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 interface MyCustomItem extends DropdownPickerItem {
 	// id, label, value are inherited

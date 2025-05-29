@@ -6,6 +6,20 @@ tags: [react-native, progress-bar, animation, reanimated, ui-component, gradient
 
 ## Installation
 
+
+<Stepper>
+  <StepperItem title="Step 1: Install Dependencies">
+
+    ```plaintext
+    npx expo install expo-linear-gradient
+    ```
+  </StepperItem>
+
+   <StepperItem title="Step 2: Create the AnimatedProgressBar component">
+    Create a new file (e.g., `src/components/AnimatedProgressBar.tsx`) and copy the following code:
+
+
+
   ```typescript:AnimatedProgressBar.tsx
 import React, { useEffect } from "react";
 import { View, Text, StyleSheet, StyleProp, ViewStyle, TextStyle, Dimensions } from "react-native";
@@ -161,7 +175,10 @@ const styles = StyleSheet.create({
 });
 ```
 
-  
+  </StepperItem>
+
+</Stepper>
+
 
 ## Usage
 
@@ -170,7 +187,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, Button, StyleSheet, SafeAreaView, ScrollView, Platform, Dimensions } from 'react-native';
 import AnimatedProgressBar from '@/components/ui/ProgressBar'; // Adjust path
 import { useAppColors } from '@/hooks/useAppColors';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function ProgressBarPage() {
   const colors = useAppColors();
