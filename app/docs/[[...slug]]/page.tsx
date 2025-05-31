@@ -6,6 +6,8 @@ import { notFound } from "next/navigation";
 import { getCompiledDocsForSlug, getDocFrontmatter } from "@/lib/markdown";
 import { Typography } from "@/components/typography";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://nativemotion.dev"
+
 type PageProps = {
   params: Promise<{ slug: string[] }>;
 };
@@ -42,6 +44,38 @@ export default async function DocsPage(props: PageProps) {
                 ))}
               </div>
             )}
+             <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{
+                __html: JSON.stringify({
+                  "@context": "https://schema.org",
+                  "@type": "TechArticle", // or "Article" or "HowTo"
+                  "headline": res.frontmatter.title,
+                  "description": res.frontmatter.description,
+                  "image": res.frontmatter.ogImage ? new URL(res.frontmatter.ogImage, SITE_URL).toString() : new URL('/default-og-image.png', SITE_URL).toString(),
+                  "author": {
+                    "@type": "Organization", // or "Person"
+                    "name": res.frontmatter.author || "Your Documentation Team"
+                  },
+                  "publisher": {
+                    "@type": "Organization",
+                    "name": "NativeMotion",
+                    "logo": {
+                      "@type": "ImageObject",
+                      "url": new URL('/nmlogo.png.png', SITE_URL).toString() // URL to your site's logo
+                    }
+                  },
+                  "datePublished": res.frontmatter.lastModified || new Date().toISOString(), // Use a creation date if available
+                  "dateModified": res.frontmatter.lastModified || new Date().toISOString(),
+                  "mainEntityOfPage": {
+                    "@type": "WebPage",
+                    "@id": `${SITE_URL}/docs/${pathName}`
+                  }
+                  // For "HowTo" schema, you'd add "step" properties.
+                  // For "FAQPage" schema, you'd add "mainEntity" with questions and answers.
+                }),
+              }}
+            />
             <div>{res.content}</div>
             <Pagination pathname={pathName} />
           </Typography>
@@ -58,14 +92,54 @@ export async function generateMetadata(props: PageProps) {
   const { slug = [] } = params;
 
   const pathName = slug.join("/");
-  const res = await getDocFrontmatter(pathName);
-  if (!res) return {};
-  const { title, description } = res;
+  const docFrontmatter = await getDocFrontmatter(pathName); // Renamed 'res' for clarity
+
+  if (!docFrontmatter) {
+    return {
+      title: "Not Found",
+      description: "The page you are looking for does not exist.",
+    };
+  }
+
+  const { title, description, keywords, ogImage, author, lastModified } = docFrontmatter;
+  const fullUrl = `${SITE_URL}/docs/${pathName}`; // Construct the full URL
+
+  const images = ogImage
+    ? [{ url: new URL(ogImage, SITE_URL).toString(), width: 1200, height: 630, alt: title }]
+    : [{ url: new URL('/default-og-image.png', SITE_URL).toString(), width: 1200, height: 630, alt: 'Default OG Image' }]; // Fallback OG image
+
   return {
-    title,
+    title: `${title} | NativeMotion`, // Append site name for branding
     description,
+    keywords: keywords || [], // Add keywords from frontmatter
+    authors: author ? [{ name: author }] : [{ name: "Your Documentation Team" }],
+    alternates: {
+      canonical: fullUrl, // Set the canonical URL
+    },
+    openGraph: {
+      title: `${title} | NativeMotion`,
+      description,
+      url: fullUrl,
+      siteName: 'NativeMotion',
+      images: images,
+      type: 'article', // For documentation pages, 'article' is appropriate
+      publishedTime: lastModified || new Date().toISOString(), // Or from frontmatter if available
+      modifiedTime: lastModified || new Date().toISOString(), // Or from frontmatter
+      authors: author ? [author] : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${title} | NativeMotion`,
+      description,
+      images: images,
+      // creator: '@yourTwitterHandle', // Optional: Your Twitter handle
+      // site: '@yourTwitterHandle', // Optional: Site's Twitter handle
+    },
+    // Optional: Add more specific metadata like lastModified for Google
+    ...(lastModified && { lastModified: new Date(lastModified) }),
   };
 }
+
 
 export function generateStaticParams() {
   return page_routes.map((item) => ({

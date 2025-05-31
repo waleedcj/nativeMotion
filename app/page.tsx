@@ -14,6 +14,7 @@ import {
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/Card";
+import { LazyVideo } from "@/components/LazyVideo";
 
 export default function Home() {
   return (
@@ -111,48 +112,64 @@ export default function Home() {
               {/* Column 1 */}
               <div className="space-y-4">
                 {/* Mockup 1 Wrapper - Removed aspect-ratio */}
-                <div className="rounded-xl p-1 hover:scale-105 transition-transform">
-                  <Image
-                    src="https://cdn.jsdelivr.net/gh/waleedcj/EziuiAssets/mock.png"
-                    alt="Animation Demo 1"
-                    width={250} // Use actual width of your source image
-                    height={500} // Use actual height of your source image
-                    className="rounded-lg object-cover w-full h-auto" // Added w-full h-auto, removed fill
-                  />
-                </div>
-                {/* Mockup 2 Wrapper */}
-                <div className="rounded-xl p-1 hover:scale-105 transition-transform">
-                  <Image
-                    src="https://cdn.jsdelivr.net/gh/waleedcj/EziuiAssets/mock.png"
-                    alt="Animation Demo 2"
-                    width={250} // Use actual width of your source image
-                    height={500} // Use actual height
-                    className="rounded-lg object-cover w-full h-auto" // Added w-full h-auto, removed fill
-                  />
-                </div>
+                <LazyVideo
+                  videoSrc={videoData[0].src}
+                  containerWrapperClassName="rounded-xl p-1 hover:scale-105 transition-transform"
+                  // customPlaceholderImageSrc={videoData[0].customPlaceholderImageSrc} // Uncomment if you have this
+                  videoElementAttributes={{
+                    height: 500, // HTML attribute for intrinsic size hint & skeleton height
+                    className: "rounded-3xl object-fill w-full", // Applied to video & placeholder
+                    autoPlay: true,
+                    loop: true,
+                    muted: true,
+                    playsInline: true, // Crucial for iOS
+                    "aria-label": videoData[0].ariaLabel,
+                    // poster: "optional_native_video_poster.jpg" // Video's own poster attribute
+                  }}
+                />
+                <LazyVideo
+                  videoSrc={videoData[1].src}
+                  containerWrapperClassName="rounded-xl p-1 hover:scale-105 transition-transform"
+                  videoElementAttributes={{
+                    height: 500,
+                    className: "rounded-3xl object-fill w-full",
+                    autoPlay: true,
+                    loop: true,
+                    muted: true,
+                    playsInline: true,
+                    "aria-label": videoData[1].ariaLabel,
+                  }}
+                />
               </div>
               {/* Column 2 */}
               <div className="space-y-4 mt-4">
                 {/* Mockup 3 Wrapper */}
-                <div className="rounded-xl p-1 hover:scale-105 transition-transform">
-                  <Image
-                    src="https://cdn.jsdelivr.net/gh/waleedcj/EziuiAssets/mock.png"
-                    alt="Animation Demo 3"
-                    width={250} // Use actual width of your source image
-                    height={500} // Use actual height
-                    className="rounded-lg object-cover w-full h-auto" // Added w-full h-auto, removed fill
-                  />
-                </div>
-                {/* Mockup 4 Wrapper */}
-                <div className="rounded-xl p-1 hover:scale-105 transition-transform">
-                  <Image
-                    src="https://cdn.jsdelivr.net/gh/waleedcj/EziuiAssets/mock.png"
-                    alt="Animation Demo 4"
-                    width={250} // Use actual width of your source image
-                    height={500} // Use actual height
-                    className="rounded-lg object-cover w-full h-auto" // Added w-full h-auto, removed fill
-                  />
-                </div>
+                <LazyVideo
+                  videoSrc={videoData[2].src}
+                  containerWrapperClassName="rounded-xl p-1 hover:scale-105 transition-transform"
+                  videoElementAttributes={{
+                    height: 500,
+                    className: "rounded-3xl object-fill w-full",
+                    autoPlay: true,
+                    loop: true,
+                    muted: true,
+                    playsInline: true,
+                    "aria-label": videoData[2].ariaLabel,
+                  }}
+                />
+                <LazyVideo
+                  videoSrc={videoData[3].src}
+                  containerWrapperClassName="rounded-xl p-1 hover:scale-105 transition-transform"
+                  videoElementAttributes={{
+                    height: 500,
+                    className: "rounded-3xl object-fill w-full",
+                    autoPlay: true,
+                    loop: true,
+                    muted: true,
+                    playsInline: true,
+                    "aria-label": videoData[3].ariaLabel,
+                  }}
+                />
               </div>
             </div>
           </motion.div>
@@ -227,4 +244,25 @@ const features = [
 		  "New animation every week means your library keeps expanding. Never run out of fresh ideas for your apps.",
 		benefit: "52+ new components per year",
 	  },
+];
+
+const videoData = [
+  {
+    src: "https://cdn.jsdelivr.net/gh/waleedcj/EziuiAssets/ccinfo.mp4",
+    ariaLabel: "Credit Card Form Animation Demo",
+    // Optional: Add a specific poster image if you have one
+    // customPlaceholderImageSrc: "/placeholders/ccinfo-poster.jpg",
+  },
+  {
+    src: "https://cdn.jsdelivr.net/gh/waleedcj/EziuiAssets/header.mp4",
+    ariaLabel: "Animated Header Demo",
+  },
+  {
+    src: "https://cdn.jsdelivr.net/gh/waleedcj/EziuiAssets/onboarding.mp4",
+    ariaLabel: "Onboarding Screen Animation Demo",
+  },
+  {
+    src: "https://cdn.jsdelivr.net/gh/waleedcj/EziuiAssets/picker.mp4",
+    ariaLabel: "Custom Picker Animation Demo",
+  },
 ];

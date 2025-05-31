@@ -25,6 +25,10 @@ export const ROUTES: EachRoute[] = [
         href: "/setup-theme",
       },
       {
+        title: "Install Icons",
+        href: "/install-icons",
+      },
+      {
         title: "Setup Theme Provider (optional)",
         href: "/setup-theme-provider",
       },

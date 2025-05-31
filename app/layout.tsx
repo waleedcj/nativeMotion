@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
 import { ThemeProvider } from "@/components/contexts/theme-provider";
 import { Navbar } from "@/components/navbar";
-import {
-  Space_Mono,
-  DM_Sans,
-  Plus_Jakarta_Sans,
-} from "next/font/google";
+import { Space_Mono, DM_Sans, Plus_Jakarta_Sans } from "next/font/google";
 import { Footer } from "@/components/footer";
 import { QrCode } from "@/components/QrCode";
 import "@/styles/globals.css";
@@ -29,14 +25,15 @@ const space = Space_Mono({
   variable: "--font-geist-mono",
   display: "swap",
   weight: "400",
-})
+});
 
 export const metadata: Metadata = {
   title: "Native Motion",
-  metadataBase: new URL("https://nativemotion.dev"),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || "https://nativemotion.dev"
+  ),
   description:
-  "Copy Paste modern UI components and design systems for React Native.",
-
+    "Copy Paste modern UI components and design systems for React Native.",
 };
 
 export default function RootLayout({
@@ -54,7 +51,7 @@ export default function RootLayout({
         /> */}
       </head>
       <body
-				className={`${dmSans.variable} ${jakarta.variable} ${space.variable} font-sans antialiased tracking-wide`}
+        className={`${dmSans.variable} ${jakarta.variable} ${space.variable} font-sans antialiased tracking-wide`}
         suppressHydrationWarning
       >
         <ThemeProvider

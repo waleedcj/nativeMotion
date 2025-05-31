@@ -1,0 +1,86 @@
+---
+title: Install Expo Vector Icons
+description: A comprehensive guide to installing and using vector icons from the `@expo/vector-icons` library in your React Native Expo projects.
+tags: [expo, react-native, icons, vector-icons, ui-component, installation]
+keywords:
+  [
+    "install expo vector icons",
+    "expo vector icons installation",
+    "react native vector icons",
+    "expo icons setup",
+    "how to use expo icons",
+    "react native icons",
+    "add icons to expo project",
+    "expo development tools",
+    "react native ui components",
+    "react native ui library",
+    "best react native ui library",
+    "expo ui libraries",
+    "react native icon library",
+    "font icons react native",
+    "material icons react native",
+    "ionicons react native",
+    "ant design icons react native",
+    "font awesome react native",
+    "copy paste expo icons",
+    "boilerplate expo icons",
+    "expo react native icons example",
+  ]
+author: "walid memon"
+ogImage: "/searchBar.webp" # You might want a generic one for installation guides
+lastModified: "2025-05-31T10:00:00Z"
+---
+
+## Installation
+
+<Stepper>
+  <StepperItem title="Step 1: Install the package">
+    Install the `@expo/vector-icons` package using your preferred package manager:
+
+    ```plaintext
+    npx expo install @expo/vector-icons
+    ```
+    or
+    ```plaintext
+    yarn add @expo/vector-icons
+    ```
+  </StepperItem>
+
+  <StepperItem title="Step 2: Use an Icon in Your Component">
+    You can now import and use various icon sets provided by the library. For example, to use `Ionicons`:
+
+    ```typescript:MyComponent.tsx
+    import React from 'react';
+    import { View, Text, StyleSheet } from 'react-native';
+    import Ionicons from '@expo/vector-icons/Ionicons'; // Import a specific icon set
+
+    export default function MyComponent() {
+      return (
+        <View style={styles.container}>
+          <Text style={styles.text}>Hello, Icon!</Text>
+          <Ionicons name="home" size={32} color="blue" />
+          <Ionicons name="search-outline" size={24} color="green" />
+        </View>
+      );
+    }
+
+    const styles = StyleSheet.create({
+      container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
+      text: {
+        fontSize: 20,
+        marginBottom: 10,
+      },
+    });
+    ```
+  </StepperItem>
+
+  <StepperItem title="Step 3: Explore More Icons">
+    The `@expo/vector-icons` library bundles several popular icon sets. You can find a complete list of available icons and their names in the official Expo documentation:
+
+    [Browse all available icons in Expo Docs](https://docs.expo.dev/guides/icons/)
+  </StepperItem>
+</Stepper>

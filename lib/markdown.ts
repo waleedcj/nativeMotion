@@ -86,13 +86,31 @@ export type BaseMdxFrontmatter = {
   tags?: string[];
 };
 
+export type DocMdxFrontmatter = BaseMdxFrontmatter & {
+  keywords?: string[];
+  ogImage?: string; // Relative path URL
+  author?: string;
+  lastModified?: string; // ISO date string: "YYYY-MM-DDTHH:mm:ssZ"
+};
+
 export async function getCompiledDocsForSlug(slug: string) {
   try {
     const contentPath = getDocsContentPath(slug);
     const rawMdx = await fs.readFile(contentPath, "utf-8");
-    return await parseMdx<BaseMdxFrontmatter>(rawMdx);
+    // Use the more specific DocMdxFrontmatter type here
+    const result = await parseMdx<DocMdxFrontmatter>(rawMdx);
+
+    // Optionally, ensure lastModified is set if not present in frontmatter
+    // This is often better handled in getDocFrontmatter directly if it's only for metadata
+    // But if the page content itself needs to display it, it could be populated here too.
+    if (!result.frontmatter.lastModified) {
+        const stats = await fs.stat(contentPath);
+        result.frontmatter.lastModified = stats.mtime.toISOString();
+    }
+    return result;
+
   } catch (err) {
-    console.log(err);
+    console.error(`Error compiling MDX for doc slug "${slug}":`, err);
   }
 }
 
@@ -251,12 +269,24 @@ export async function getBlogFrontmatter(slug: string) {
   }
 }
 
-export async function getDocFrontmatter(path: string) {
+export async function getDocFrontmatter(
+  slugPath: string // Renamed from 'path' to 'slugPath' for clarity
+): Promise<DocMdxFrontmatter | undefined> {
   try {
-    const contentPath = getDocsContentPath(path);
+    const contentPath = getDocsContentPath(slugPath);
     const rawMdx = await fs.readFile(contentPath, "utf-8");
-    return justGetFrontmatterFromMD<BlogMdxFrontmatter>(rawMdx);
-  } catch {
+    const { data: frontmatterData } = matter(rawMdx); // Use gray-matter to parse
+
+    const frontmatter = frontmatterData as DocMdxFrontmatter;
+
+    // If lastModified is not in frontmatter, get it from file system
+    if (!frontmatter.lastModified) {
+      const stats = await fs.stat(contentPath);
+      frontmatter.lastModified = stats.mtime.toISOString();
+    }
+    return frontmatter;
+  } catch (error) {
+    // console.error(`Error getting frontmatter for doc "${slugPath}":`, error); // Be mindful of verbosity in build logs
     return undefined;
   }
 }
