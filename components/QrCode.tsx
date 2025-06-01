@@ -113,7 +113,7 @@ export function QrCode() {
               />
             </div>
             <p className="mt-3 text-xs text-neutral-500">
-              Point your device's camera or the Expo Go app at the QR code.
+              Point your device&apos;s camera or the Expo Go app at the QR code.
             </p>
           </div>
         </div>

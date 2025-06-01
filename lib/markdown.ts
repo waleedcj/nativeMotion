@@ -286,7 +286,7 @@ export async function getDocFrontmatter(
     }
     return frontmatter;
   } catch (error) {
-    // console.error(`Error getting frontmatter for doc "${slugPath}":`, error); // Be mindful of verbosity in build logs
+    console.error(`Error getting frontmatter for doc "${slugPath}":`, error); // Be mindful of verbosity in build logs
     return undefined;
   }
 }

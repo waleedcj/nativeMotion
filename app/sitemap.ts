@@ -13,7 +13,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     return {
       url: `${SITE_URL}${item.href}`, // Ensure item.href starts with '/' e.g., /docs/slug
       lastModified: new Date(), // Or fetch from frontmatter/git history
-      changeFrequency: 'weekly' as 'weekly', // Or 'monthly', 'daily'
+      changeFrequency: 'weekly' as const, // Or 'monthly', 'daily'
       priority: item.href === '/docs' || item.href === '/' ? 1 : 0.8, // Example priority
     };
   });
@@ -23,7 +23,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     {
       url: SITE_URL,
       lastModified: new Date(),
-      changeFrequency: 'monthly' as 'monthly',
+      changeFrequency: 'monthly' as const,
       priority: 1,
     },
     // ... other static pages

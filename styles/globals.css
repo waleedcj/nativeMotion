@@ -72,7 +72,6 @@
   }
 
   .dark {
-    /* --- Existing Next.js/shadcn Dark Variables (Keep These) --- */
     --background:  228.57, 84%, 4.9%; /* HSL format */
     --foreground: 210, 40%, 98.04%; /* HSL format */
     --card: 20 14.3% 4.1%;

@@ -1,8 +1,8 @@
-// components/LazyVideo.tsx
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Play } from 'lucide-react';
+import Image from 'next/image';
 
 interface LazyVideoProps {
   videoSrc: string;
@@ -22,19 +22,10 @@ export function LazyVideo({
   const [isIntersecting, setIsIntersecting] = useState(false);
   const [videoBlobUrl, setVideoBlobUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [fetchError, setFetchError] = useState<Error | null>(null); // <--- ADDED: Error state
+  const [fetchError, setFetchError] = useState<Error | null>(null); 
   const elementRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-//   // Reset states if videoSrc changes (optional, but good practice)
-//   useEffect(() => {
-//     setVideoBlobUrl(null);
-//     setIsLoading(false);
-//     setFetchError(null);
-//     // We might also want to reset isIntersecting if the component is re-used
-//     // with a new src while already visible, but the current observer logic
-//     // unobserves after first intersection.
-//   }, [videoSrc]);
 
 
   useEffect(() => {
@@ -46,13 +37,6 @@ export function LazyVideo({
             observer.unobserve(elementRef.current);
           }
         }
-        // else { // Optional: If you want to reset when it scrolls out of view
-        //   setIsIntersecting(false);
-        //   setVideoBlobUrl(null);
-        //   setFetchError(null);
-        //   setIsLoading(false);
-        //   // And potentially re-observe if you want it to load again when it comes back
-        // }
       },
       {
         rootMargin: '200px 0px',
@@ -91,9 +75,10 @@ export function LazyVideo({
           const blob = await response.blob();
           currentBlobUrlToRevoke = URL.createObjectURL(blob);
           setVideoBlobUrl(currentBlobUrlToRevoke);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
           console.error("Error fetching video (catch block):", error.message, `URL: ${videoSrc}`);
-          setFetchError(error); // <--- SET Error state in catch too
+          setFetchError(error);
         } finally {
           setIsLoading(false);
         }
@@ -127,8 +112,8 @@ export function LazyVideo({
   return (
     <div ref={elementRef} className={containerWrapperClassName}>
       {showPlaceholder ? (
-        customPlaceholderImageSrc && !fetchError ? ( // Only show custom image if no error
-          <img
+        customPlaceholderImageSrc && !fetchError ? (
+          <Image
             src={customPlaceholderImageSrc}
             alt={restVideoAttributes['aria-label'] ? `Placeholder for ${restVideoAttributes['aria-label']}` : "Video placeholder"}
             className={videoHtmlClassName}

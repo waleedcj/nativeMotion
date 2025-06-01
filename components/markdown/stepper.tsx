@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Children, PropsWithChildren } from "react";
+import { PropsWithChildren } from "react";
 
 /**
  * Container for a series of steps, displaying a vertical connecting line.
