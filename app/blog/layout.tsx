@@ -1,5 +1,7 @@
 import { PropsWithChildren } from "react";
 
+export const runtime = 'edge';
+
 export default function BlogLayout({ children }: PropsWithChildren) {
   return (
     <div className="flex flex-col items-start justify-center pt-8 pb-10 w-full mx-auto">

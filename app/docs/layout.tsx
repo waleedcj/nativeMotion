@@ -1,5 +1,7 @@
 import { Leftbar } from "@/components/leftbar";
 
+export const runtime = 'edge';
+
 export default function DocsLayout({
   children,
 }: Readonly<{
