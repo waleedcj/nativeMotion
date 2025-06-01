@@ -6,7 +6,6 @@ import { notFound } from "next/navigation";
 import { getCompiledDocsForSlug, getDocFrontmatter } from "@/lib/markdown";
 import { Typography } from "@/components/typography";
 
-export const runtime = 'edge';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://nativemotion.dev"
 
