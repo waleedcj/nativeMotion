@@ -9,7 +9,7 @@ import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
-export const runtime = 'edge';
+// export const runtime = 'edge';
 
 export const metadata: Metadata = {
   title: "NativeMotion - Blog",
