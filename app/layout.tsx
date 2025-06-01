@@ -30,7 +30,7 @@ const space = Space_Mono({
 export const metadata: Metadata = {
   title: "Native Motion",
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "https://nativemotion.dev"
+    process.env.NEXT_PUBLIC_SITE_URL || "https://nativemotion.dev" 
   ),
   description:
     "Copy-Paste modern UI components and design systems for React Native. Get production-ready, lightweight, and performant animations built with Reanimated & Expo.",
