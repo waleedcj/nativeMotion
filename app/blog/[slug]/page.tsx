@@ -13,6 +13,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDate } from "@/lib/utils";
 import Image from "next/image";
 
+export const runtime = 'edge';
+
 type PageProps = {
   params: Promise<{ slug: string }>;
 };
