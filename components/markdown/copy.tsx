@@ -21,12 +21,13 @@ export default function Copy({ content }: { content: string }) {
       variant="copy"
       className="border"
       size="xs"
+      aria-label="Copy to clipboard"
       onClick={handleCopy}
     > 
       {isCopied ? (
-        <CheckIcon className="w-3 h-3" />
+        <CheckIcon className="w-3 h-3" aria-label="Copied" />
       ) : (
-        <CopyIcon className="w-3 h-3" />
+        <CopyIcon className="w-3 h-3" aria-label="Copy to clipboard" />
       )}
     </Button>
   );

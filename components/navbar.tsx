@@ -58,8 +58,9 @@ export function Navbar() {
                   variant: "ghost",
                   size: "icon",
                 })}
+                aria-label="GitHub"
               >
-                <GithubIcon className="h-[1.1rem] w-[1.1rem]" />
+                <GithubIcon className="h-[1.1rem] w-[1.1rem]" aria-label="GitHub" />
               </Link>
               <Link
                 href="https://x.com/waleed_CJ16"
@@ -67,8 +68,9 @@ export function Navbar() {
                   variant: "ghost",
                   size: "icon",
                 })}
+                aria-label="Twitter"
               >
-                <TwitterIcon className="h-[1.1rem] w-[1.1rem]" />
+                <TwitterIcon className="h-[1.1rem] w-[1.1rem]" aria-label="Twitter" />
               </Link>
               <ModeToggle />
             </div>

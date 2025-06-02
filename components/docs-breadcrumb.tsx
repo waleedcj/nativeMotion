@@ -9,21 +9,27 @@ import {
 import { Fragment } from "react";
 
 export default function DocsBreadcrumb({ paths }: { paths: string[] }) {
+
+  const generateHref = (currentIndex: number): string => {
+    const currentPathSegments = paths.slice(0, currentIndex + 1);
+    return `/docs/${currentPathSegments.join("/")}`;
+  };
+
   return (
     <div className="pb-5">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink>Docs</BreadcrumbLink>
+          <BreadcrumbLink href="/docs">Docs</BreadcrumbLink>
           </BreadcrumbItem>
           {paths.map((path, index) => (
             <Fragment key={path}>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
                 {index < paths.length - 1 ? (
-                  <BreadcrumbLink className="a">
-                    {toTitleCase(path)}
-                  </BreadcrumbLink>
+                  <BreadcrumbLink className="a" href={generateHref(index)}> {/* ADD href HERE, or use asChild with NextLink */}
+                  {toTitleCase(path)}
+                </BreadcrumbLink>
                 ) : (
                   <BreadcrumbPage className="b">
                     {toTitleCase(path)}
@@ -45,3 +51,4 @@ function toTitleCase(input: string): string {
   );
   return capitalizedWords.join(" ");
 }
+
