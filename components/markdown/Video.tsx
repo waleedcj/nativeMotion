@@ -26,6 +26,7 @@ const Video: React.FC<VideoProps> = ({
         height={height}
         controls={controls}
         poster={poster}
+        style={{borderRadius: 8}}
         {...props} // Spread other HTML video attributes
         // Consider adding playsInline for better mobile experience
         // muted and autoPlay if it's a short demo you want to loop
