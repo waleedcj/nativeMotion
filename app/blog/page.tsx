@@ -43,7 +43,7 @@ function BlogCard({
   title,
   description,
   slug,
-  cover,
+  // cover,
   authors,
 }: BlogMdxFrontmatter & { slug: string }) {
   return (
