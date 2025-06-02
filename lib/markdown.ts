@@ -11,6 +11,7 @@ import { visit } from "unist-util-visit";
 import matter from "gray-matter";
 import { getIconName, hasSupportedExtension } from "./utils";
 import { MyIcons } from "@/components/icons";
+import Video from "@/components/markdown/Video"; 
 
 // custom components imports
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -52,7 +53,8 @@ const components = {
   tbody: TableBody,
   t: TableCell,
   MyIcons,
-  DemoLinkButton
+  DemoLinkButton,
+  Video,
 };
 
 // can be used for other pages like blogs, Guides etc

@@ -3,7 +3,7 @@ import { ThemeProvider } from "@/components/contexts/theme-provider";
 import { Navbar } from "@/components/navbar";
 import { Space_Mono, DM_Sans, Plus_Jakarta_Sans } from "next/font/google";
 import { Footer } from "@/components/footer";
-import { QrCode } from "@/components/QrCode";
+// import { QrCode } from "@/components/QrCode";
 import "@/styles/globals.css";
 
 const dmSans = DM_Sans({
@@ -66,7 +66,7 @@ export default function RootLayout({
               {children}
             </main>
             <Footer />
-            <QrCode />
+            {/* <QrCode /> */}
           </div>
         </ThemeProvider>
       </body>
