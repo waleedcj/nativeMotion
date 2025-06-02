@@ -1,5 +1,5 @@
 // components/footer.tsx
-import Link from "next/link";
+// import Link from "next/link";
 import { LogoToggle } from "./toggle-logo"; // Adjust path if necessary
 
 // Footer link data (adjust as needed)
@@ -10,23 +10,13 @@ const footerLinks = {
     // { title: "Categories", href: "#" },
   ],
   social: [
-    {
-      title: "Twitter",
-      href: "https://twitter.com/yourhandle",
-      external: true,
-    }, // Replace with your actual Twitter link
-    {
-      title: "Discord",
-      href: "https://discord.com/yourserver",
-      external: true,
-    }, // Replace with your actual Discord link
     { title: "GitHub", href: "https://github.com", external: true }, // Added GitHub
   ],
   company: [
     // { title: "Your UI Pro", href: "/pro" },
     {
       title: "Created by walid memon",
-      href: "https://github.com/waleedcj16",
+      href: "https://github.com/waleedc",
       external: true,
     }, // Example
   ],
@@ -46,9 +36,9 @@ export function Footer() {
             <div className="mt-4 text-sm space-y-1">
               {/* Adjusted margin/spacing */}
               <p>
-                Built in public by{" "}
+                Building in public by{" "}
                 <a
-                  href="https://github.com/waleedcj16"
+                  href="https://github.com/waleedcj"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-gray-800  transition-colors underline underline-offset-2"
@@ -75,13 +65,13 @@ export function Footer() {
           {/* Right Section - Link Columns */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 text-sm">
             {/* Product Links */}
-            <div className="space-y-3">
+            {/* <div className="space-y-3">
               
-              {/* Adjusted spacing */}
+           
               <h4 className="font-semibold text-gray-800   mb-3">
                 Product
               </h4>
-              {/* Added heading */}
+           
               {footerLinks.product.map((link) => (
                 <Link
                   key={link.title}
@@ -91,7 +81,7 @@ export function Footer() {
                   {link.title}
                 </Link>
               ))}
-            </div>
+            </div> */}
 
             {/* Resources Links */}
             {/* <div className="space-y-3">
@@ -104,7 +94,7 @@ export function Footer() {
             </div> */}
 
             {/* Social Links */}
-            <div className="space-y-3">
+            {/* <div className="space-y-3">
               <h4 className="font-semibold text-gray-800   mb-3">Community</h4>
               {footerLinks.social.map((link) => (
                 <a
@@ -117,10 +107,10 @@ export function Footer() {
                   {link.title}
                 </a>
               ))}
-            </div>
+            </div> */}
 
             {/* Company/Pro Links */}
-            <div className="space-y-3">
+            {/* <div className="space-y-3">
               <h4 className="font-semibold text-gray-800   mb-3">Project</h4>
               {footerLinks.company.map((link) =>
                 link.external ? (
@@ -143,9 +133,15 @@ export function Footer() {
                   </Link>
                 )
               )}
-            </div>
+            </div> */}
+          </div>
+          <div className="mt-8 pt-8 text-center text-sm text-gray-500">
+            <p>
+              © {new Date().getFullYear()} nativeMotion. All rights reserved.
+            </p>
           </div>
         </div>
+        {/* Copyright Section */}
       </div>
     </footer>
   );

@@ -3,13 +3,7 @@
 import { motion } from "framer-motion";
 import { MyIcons } from "@/components/icons";
 import Link from "next/link";
-import {
-  Zap,
-  Copy,
-  ArrowRight,
-  Sparkles,
-  Clock,
-} from "lucide-react";
+import { Zap, Copy, ArrowRight, Sparkles, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -17,27 +11,27 @@ import { LazyVideo } from "@/components/LazyVideo";
 
 // Define your data arrays here or pass them as props if they come from the server
 const features = [
-	{
-		icon: <Copy className="w-6 h-6 text-blue-600" />,
-		title: "Copy & Paste Ready",
-		description:
-		  "Drop components into your project and they work instantly. No complex setup, no configuration files, no headaches.",
-		benefit: "Save hours of development time",
-	  },
-	  {
-		icon: <Zap className="w-6 h-6 text-yellow-600" />,
-		title: "Native Performance",
-		description:
-		  "Built with Reanimated 3, all animations run on the native thread for butter-smooth 60 FPS performance on any device.",
-		benefit: "Guaranteed smooth performance",
-	  },
-	  {
-		icon: <Clock className="w-6 h-6 text-green-600" />,
-		title: "Always Growing",
-		description:
-		  "New animation every week means your library keeps expanding. Never run out of fresh ideas for your apps.",
-		benefit: "52+ new components per year",
-	  },
+  {
+    icon: <Copy className="w-6 h-6 text-blue-600" />,
+    title: "Copy & Paste Ready",
+    description:
+      "Drop components into your project and they work instantly. No complex setup, no configuration files, no headaches.",
+    benefit: "Save hours of development time",
+  },
+  {
+    icon: <Zap className="w-6 h-6 text-yellow-600" />,
+    title: "Native Performance",
+    description:
+      "Built with Reanimated 3, all animations run on the native thread for butter-smooth 60 FPS performance on any device.",
+    benefit: "Guaranteed smooth performance",
+  },
+  {
+    icon: <Clock className="w-6 h-6 text-green-600" />,
+    title: "Always Growing",
+    description:
+      "New animation every week means your library keeps expanding. Never run out of fresh ideas for your apps.",
+    benefit: "52+ new components per year",
+  },
 ];
 
 const videoData = [
@@ -58,7 +52,6 @@ const videoData = [
     ariaLabel: "Custom Picker Animation Demo",
   },
 ];
-
 
 export default function LandingPage() {
   return (
@@ -103,7 +96,7 @@ export default function LandingPage() {
             {/* Tech Stack */}
             <div className="relative mt-10">
               <div
-                className="flex justify-start items-center mb-4 overflow-x-auto relative z-20 no-visible-scrollbar"
+                className="grid grid-cols-2 gap-x-4 gap-y-6 md:flex md:flex-wrap md:justify-start md:items-center md:gap-x-0 md:gap-y-0 mb-4 relative z-20 no-visible-scrollbar"
                 style={{ scrollbarWidth: "none" }}
               >
                 <div className="flex items-center space-x-2 mr-4">
@@ -112,7 +105,7 @@ export default function LandingPage() {
                     React Native
                   </span>
                 </div>
-				<div className="flex items-center space-x-2 mr-4">
+                <div className="flex items-center space-x-2 mr-4">
                   <MyIcons.ExpoIcon className="md:h-8 md:w-8 h-7 w-7 text-gray-500  flex-shrink-0 opacity-70 hover:opacity-100 transition-opacity" />
                   <span className="text-sm font-semibold text-gray-500  flex-shrink-0">
                     Expo
@@ -121,12 +114,14 @@ export default function LandingPage() {
                 <div className="flex items-center space-x-2 mr-4">
                   <MyIcons.RnghIcon className="md:h-8 md:w-8 h-6 w-6 text-gray-500  flex-shrink-0 opacity-70 hover:opacity-100 transition-opacity" />
                   <span className="text-sm font-semibold text-gray-500  flex-shrink-0">
-				  Gesture Handler
+                    Gesture Handler
                   </span>
                 </div>
-				<div className="flex items-center space-x-2">
-            	  <MyIcons.R3Icon className="md:h-8 md:w-8 h-6 w-6 text-gray-500  flex-shrink-0 opacity-70 hover:opacity-100 transition-opacity" />
-				  <span className="text-sm font-semibold text-gray-500  flex-shrink-0">Reanimated 3</span>
+                <div className="flex items-center space-x-2">
+                  <MyIcons.R3Icon className="md:h-8 md:w-8 h-6 w-6 text-gray-500  flex-shrink-0 opacity-70 hover:opacity-100 transition-opacity" />
+                  <span className="text-sm font-semibold text-gray-500  flex-shrink-0">
+                    Reanimated 3
+                  </span>
                 </div>
               </div>
             </div>
@@ -203,7 +198,7 @@ export default function LandingPage() {
         </div>
       </div>
       {/* Features Section */}
-	  <div className="container mx-auto px-4 py-20 bg-gray-50/50">
+      <div className="container mx-auto px-4 py-20 bg-gray-50/50">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -214,14 +209,15 @@ export default function LandingPage() {
             Why choose our animations
           </Badge>
           <h2 className="text-3xl md:text-4xl font-bold mb-4 text-neutral-900 font-jakarta">
-            From idea to app store in <span className="text-primary-orange">half the time</span>
+            From idea to app store in{" "}
+            <span className="text-primary-orange">half the time</span>
           </h2>
           <p className="text-gray-600 text-xl max-w-2xl mx-auto">
-            Stop building animations from scratch. Use our growing library of battle-tested components and focus on what
-            makes your app unique.
+            Stop building animations from scratch. Use our growing library of
+            battle-tested components and focus on what makes your app unique.
           </p>
         </motion.div>
-		<div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-3 gap-8">
           {features.map((feature, index) => (
             <motion.div
               key={feature.title}
@@ -232,11 +228,19 @@ export default function LandingPage() {
               <Card className="bg-gray-100 h-full hover:shadow-lg transition-all duration-300 border-0 shadow-md">
                 <CardContent className="p-8">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 bg-gray-200 rounded-lg">{feature.icon}</div>
-                    <h3 className="text-xl text-neutral-900 font-semibold font-jakarta">{feature.title}</h3>
+                    <div className="p-2 bg-gray-200 rounded-lg">
+                      {feature.icon}
+                    </div>
+                    <h3 className="text-xl text-neutral-900 font-semibold font-jakarta">
+                      {feature.title}
+                    </h3>
                   </div>
-                  <p className="text-gray-600 leading-relaxed mb-4">{feature.description}</p>
-                  <div className="text-sm text-primary-orange font-medium">{feature.benefit}</div>
+                  <p className="text-gray-600 leading-relaxed mb-4">
+                    {feature.description}
+                  </p>
+                  <div className="text-sm text-primary-orange font-medium">
+                    {feature.benefit}
+                  </div>
                 </CardContent>
               </Card>
             </motion.div>

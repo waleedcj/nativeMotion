@@ -132,7 +132,7 @@ export async function generateMetadata(props: PageProps) {
       card: 'summary_large_image',
       title: `${title} | NativeMotion`,
       description,
-      images: images,
+      images: images, 
       // creator: '@yourTwitterHandle', // Optional: Your Twitter handle
       // site: '@yourTwitterHandle', // Optional: Site's Twitter handle
     },

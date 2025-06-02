@@ -13,6 +13,7 @@ import { DialogTitle } from "./ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import DocsMenu from "./docs-menu";
 import { LogoToggle } from "./toggle-logo";
+import { FooterButtons } from "./footer-buttons";
 
 export function Leftbar() {
   return (
@@ -46,9 +47,9 @@ export function SheetLeftbar() {
           <div className="ml-2 pl-5">
             <DocsMenu isSheet />
           </div>
-          {/* <div className="p-6 pb-4 flex gap-2.5">
+          <div className="md:hidden flex mt-auto p-6">
             <FooterButtons />
-          </div> */}
+          </div>
         </div>
       </SheetContent>
     </Sheet>
