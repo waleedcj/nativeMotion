@@ -3,24 +3,24 @@
 import { LogoToggle } from "./toggle-logo"; // Adjust path if necessary
 
 // Footer link data (adjust as needed)
-const footerLinks = {
-  product: [
-    { title: "Components", href: "/docs/components" }, // Link to your actual components page
-    // { title: "Templates", href: "#" },
-    // { title: "Categories", href: "#" },
-  ],
-  social: [
-    { title: "GitHub", href: "https://github.com", external: true }, // Added GitHub
-  ],
-  company: [
-    // { title: "Your UI Pro", href: "/pro" },
-    {
-      title: "Created by walid memon",
-      href: "https://github.com/waleedc",
-      external: true,
-    }, // Example
-  ],
-};
+// const footerLinks = {
+//   product: [
+//     { title: "Components", href: "/docs/components" }, // Link to your actual components page
+//     // { title: "Templates", href: "#" },
+//     // { title: "Categories", href: "#" },
+//   ],
+//   social: [
+//     { title: "GitHub", href: "https://github.com", external: true }, // Added GitHub
+//   ],
+//   company: [
+//     // { title: "Your UI Pro", href: "/pro" },
+//     {
+//       title: "Created by walid memon",
+//       href: "https://github.com/waleedc",
+//       external: true,
+//     }, // Example
+//   ],
+// };
 
 export function Footer() {
   return (
