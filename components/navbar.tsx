@@ -26,10 +26,6 @@ export const NAVLINKS = [
   //   title: "Guides",
   //   href: "#",
   // },
-  // {
-  //   title: "Community",
-  //   href: "https://github.com/nisabmohd/Aria-Docs/discussions",
-  // },
 ];
 
 // const algolia_props = {
@@ -57,7 +53,7 @@ export function Navbar() {
           <div className="flex items-center justify-between sm:gap-2">
             <div className="flex ml-4 sm:ml-0">
               <Link
-                href="https://github.com/nisabmohd/NexDocs"
+                href="https://github.com/waleedcj/nativeMotion"
                 className={buttonVariants({
                   variant: "ghost",
                   size: "icon",
@@ -66,7 +62,7 @@ export function Navbar() {
                 <GithubIcon className="h-[1.1rem] w-[1.1rem]" />
               </Link>
               <Link
-                href="#"
+                href="https://x.com/waleed_CJ16"
                 className={buttonVariants({
                   variant: "ghost",
                   size: "icon",

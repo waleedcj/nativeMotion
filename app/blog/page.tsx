@@ -6,7 +6,7 @@ import {
 } from "@/lib/markdown";
 import { formatDate2, stringToDate } from "@/lib/utils";
 import { Metadata } from "next";
-import Image from "next/image";
+// import Image from "next/image";
 import Link from "next/link";
 
 // export const runtime = 'edge';
@@ -53,14 +53,15 @@ function BlogCard({
     >
       <h3 className="text-md font-semibold -mt-1 pr-7">{title}</h3>
       <div className="w-full">
-        <Image
+        {/* <Image
           src={cover}
           alt={title}
           width={400}
           height={150}
           quality={80}
+          unoptimized
           className="w-full rounded-md object-cover h-[180px] border"
-        />
+        /> */}
       </div>
       <p className="text-sm text-muted-foreground">{description}</p>
       <div className="flex items-center justify-between w-full mt-auto">

@@ -109,6 +109,7 @@ export function QrCode() {
                 width={220} // Adjust to the natural width of your QR image or desired display width
                 height={220} // Adjust to the natural height of your QR image or desired display height
                 priority // Optional: if this image is important for LCP
+                unoptimized
                 className="rounded-sm" // Optional: if the QR code image itself doesn't have rounded corners and you want them
               />
             </div>

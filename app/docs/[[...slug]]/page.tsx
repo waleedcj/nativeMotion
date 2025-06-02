@@ -106,8 +106,8 @@ export async function generateMetadata(props: PageProps) {
   const fullUrl = `${SITE_URL}/docs/${pathName}`; // Construct the full URL
 
   const images = ogImage
-    ? [{ url: new URL(ogImage, SITE_URL).toString(), width: 1200, height: 630, alt: title }]
-    : [{ url: new URL('/default-og-image.png', SITE_URL).toString(), width: 1200, height: 630, alt: 'Default OG Image' }]; // Fallback OG image
+    ? [{ url: new URL(ogImage, SITE_URL).toString(), width: 1200, height: 675, alt: title }]
+    : [{ url: new URL('/opengraph-image.png', SITE_URL).toString(), width: 1200, height: 675, alt: 'Default OG Image' }]; // Fallback OG image
 
   return {
     title: `${title} | NativeMotion`, // Append site name for branding

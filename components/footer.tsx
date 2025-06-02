@@ -61,7 +61,7 @@ export function Footer() {
               <p>
                 Source code on{" "}
                 <a
-                  href="https://github.com"
+                  href="https://github.com/waleedcj/nativeMotion"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-gray-800   transition-colors underline underline-offset-2"

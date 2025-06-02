@@ -15,6 +15,7 @@ export function LogoToggle() {
         <Image
           height={40} 
           width={40} 
+          unoptimized
           src="/logo.svg"
           alt={`${brandName} Logo Visual Light Mode`}
           className="h-8 w-auto object-contain block" 
