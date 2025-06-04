@@ -8,7 +8,6 @@
 Native Motion provides developers with a growing library of lightweight UI elements that can be easily integrated into any React Native project. Our focus is on delivering a seamless copy-paste experience, allowing you to build stunning interfaces without the usual overhead, powered by modern animation techniques.
 
 **Explore the Components & Documentation: [nativemotion.dev](https://nativemotion.dev)**
-*(Replace with your actual live URL when available)*
 
 ## ✨ Key Features
 
