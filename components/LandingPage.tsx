@@ -60,7 +60,11 @@ export default function LandingPage() {
       <div className="container mx-auto px-4 py-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Left Content */}
-          <div>
+          <motion.div
+            initial={{ opacity: 0, y: 0 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
             <Badge
               variant="secondary"
               className="px-4 py-2 text-sm font-medium bg-gray-100 text-gray-700 border-gray-200"
@@ -121,7 +125,7 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Right Content - iPhone Mockups */}
           <motion.div
