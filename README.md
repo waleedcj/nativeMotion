@@ -25,7 +25,7 @@ Native Motion provides developers with a growing library of lightweight UI eleme
 
 Native Motion is designed to be incredibly straightforward for developers:
 
-1.  **Browse the Documentation:** Visit our official documentation site at [nativemotion.dev](https://nativemotion.dev) (replace with actual URL). Here you can explore:
+1.  **Browse the Documentation:** Visit our official documentation site at [nativemotion.dev](https://nativemotion.dev) Here you can explore:
     *   Live previews of each component.
     *   Detailed usage instructions and code snippets.
     *   Information on available props for customization.
