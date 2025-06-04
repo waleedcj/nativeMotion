@@ -141,7 +141,7 @@ export default function LandingPage() {
                   videoSrc={videoData[0].src}
                   containerWrapperClassName="rounded-xl p-1 hover:scale-105 transition-transform"
                   videoElementAttributes={{
-                    height: 500,
+                    height: 600,
                     className: "rounded-3xl object-fill w-full",
                     autoPlay: true,
                     loop: true,
@@ -154,7 +154,7 @@ export default function LandingPage() {
                   videoSrc={videoData[1].src}
                   containerWrapperClassName="rounded-xl p-1 hover:scale-105 transition-transform"
                   videoElementAttributes={{
-                    height: 500,
+                    height: 600,
                     className: "rounded-3xl object-fill w-full",
                     autoPlay: true,
                     loop: true,
@@ -170,7 +170,7 @@ export default function LandingPage() {
                   videoSrc={videoData[2].src}
                   containerWrapperClassName="rounded-xl p-1 hover:scale-105 transition-transform"
                   videoElementAttributes={{
-                    height: 500,
+                    height: 600,
                     className: "rounded-3xl object-fill w-full",
                     autoPlay: true,
                     loop: true,
@@ -183,7 +183,7 @@ export default function LandingPage() {
                   videoSrc={videoData[3].src}
                   containerWrapperClassName="rounded-xl p-1 hover:scale-105 transition-transform"
                   videoElementAttributes={{
-                    height: 500,
+                    height: 600,
                     className: "rounded-3xl object-fill w-full",
                     autoPlay: true,
                     loop: true,

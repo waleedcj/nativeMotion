@@ -99,7 +99,7 @@ export function LazyVideo({
 
   const { className: videoHtmlClassName, ...restVideoAttributes } = videoElementAttributes;
 
-  let skeletonHeight = '400px';
+  let skeletonHeight = '500px';
   if (restVideoAttributes.height) {
     skeletonHeight = typeof restVideoAttributes.height === 'string'
       ? restVideoAttributes.height
@@ -123,7 +123,7 @@ export function LazyVideo({
         ) : (
           <div
             className={`relative flex items-center justify-center bg-gray-200  ${!fetchError ? 'animate-pulse' : ''} ${videoHtmlClassName || ''} ${skeletonAdditionalClassName || ''}`}
-            style={{ height: skeletonHeight }}
+            style={{ height: skeletonHeight, width: '320px' }}
             aria-label={fetchError ? 'Error loading video' : (restVideoAttributes['aria-label'] ? `Loading ${restVideoAttributes['aria-label']}` : "Loading video content")}
           >
             {/* Optionally, show a different icon or message on error */}
