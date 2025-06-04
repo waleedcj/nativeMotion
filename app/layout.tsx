@@ -3,8 +3,8 @@ import { ThemeProvider } from "@/components/contexts/theme-provider";
 import { Navbar } from "@/components/navbar";
 import { Space_Mono, DM_Sans, Plus_Jakarta_Sans } from "next/font/google";
 import { Footer } from "@/components/footer";
-// import { QrCode } from "@/components/QrCode";
 import "@/styles/globals.css";
+import Script from "next/script";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -30,7 +30,7 @@ const space = Space_Mono({
 export const metadata: Metadata = {
   title: "Native Motion",
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "https://nativemotion.dev" 
+    process.env.NEXT_PUBLIC_SITE_URL || "https://nativemotion.dev"
   ),
   description:
     "Copy-Paste modern UI components and design systems for React Native. Get production-ready, lightweight, and performant animations built with Reanimated & Expo.",
@@ -44,11 +44,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* <link
-          rel="stylesheet"
-          type="text/css"
-          href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css"
-        /> */}
+        <Script
+          strategy="afterInteractive"
+          defer src="https://cloud.umami.is/script.js" data-website-id="094b769f-2123-4c64-b85c-197aac08f540"
+        />
       </head>
       <body
         className={`${dmSans.variable} ${jakarta.variable} ${space.variable} font-sans antialiased tracking-wide`}
@@ -66,7 +65,6 @@ export default function RootLayout({
               {children}
             </main>
             <Footer />
-            {/* <QrCode /> */}
           </div>
         </ThemeProvider>
       </body>
