@@ -48,6 +48,7 @@ import {
 	StyleProp,
 	ViewStyle,
 	TextInputProps,
+	PixelRatio
 } from "react-native";
 
 //you can change it from here or from the TextInputProps using style prop
@@ -75,7 +76,7 @@ export default function OTPInput(
 		OTPInputProps
 ) {
 	const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
-
+	const fontScale = PixelRatio.getFontScale();
 	const handleFocus = (index: number) => setFocusedIndex(index);
 	const handleBlur = () => setFocusedIndex(null);
 
@@ -93,6 +94,7 @@ export default function OTPInput(
 				{props?.codes.map((code, index) => (
 					<TextInput
 						key={index}
+						aria-label=""
 						autoComplete="one-time-code"
 						enterKeyHint="done"
 						style={[
@@ -107,6 +109,9 @@ export default function OTPInput(
 							{
 								backgroundColor: props?.inputBackgroundColor,
 								color: props?.inputTextColor,
+								height: INPUT_SIZE * fontScale,
+								width: INPUT_SIZE * fontScale,
+								borderRadius: INPUT_BORDER_RADIUS * fontScale
 							},
 						]}
 						inputMode="numeric"
@@ -148,9 +153,6 @@ const styles = StyleSheet.create({
 	input: {
 		fontSize: 20,
 		fontWeight: "500",
-		height: INPUT_SIZE,
-		width: INPUT_SIZE,
-		borderRadius: INPUT_BORDER_RADIUS,
 		textAlign: "center",
 		borderWidth: 1,
 	},

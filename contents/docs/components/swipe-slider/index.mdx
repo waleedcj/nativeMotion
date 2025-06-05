@@ -81,9 +81,9 @@ const { width: screenWidth } = Dimensions.get("window");
 const SLIDER_TRACK_WIDTH = screenWidth * 0.8;
 const SLIDER_SIZE = 50;
 const TRACK_HEIGHT = SLIDER_SIZE + 10; //ideally you want the slider container slightly bigger than the handle
-const BORDER_RADIUS = 16; //same for both
+const BORDER_RADIUS = 16; //same for both the slider and the track
 const TRACK_PADDING = 5;
-const HANDLE_INITIAL_LEFT = 5; // The handle moves from its initial `left` position.
+const SLIDER_INITIAL_LEFT = 5; // The handle moves from its initial `left` position.
 const COMPLETION_THRESHOLD_PERCENTAGE = 0.98; //if handle is moved 98% it is considered done
 export const SPRING_CONFIG = {
 	damping: 20,
@@ -133,7 +133,7 @@ const SwipeSlider: React.FC<SwipeSliderProps> = ({
 	const offset = useSharedValue(0);
 	const completionProgress = useSharedValue(0);
 	const MaxOffset =
-		sliderTrackWidth - sliderSize - TRACK_PADDING - HANDLE_INITIAL_LEFT; // Calculate the maximum translation offset for the handle
+		sliderTrackWidth - sliderSize - TRACK_PADDING - SLIDER_INITIAL_LEFT; // Calculate the maximum translation offset for the handle
 	const CompletionOffset = MaxOffset * COMPLETION_THRESHOLD_PERCENTAGE; // how much offset until complete
 
 	const motion =
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
 	},
 	sliderHandle: {
 		position: "absolute",
-		left: HANDLE_INITIAL_LEFT,
+		left: SLIDER_INITIAL_LEFT,
 		alignItems: "center",
 		justifyContent: "center",
 		zIndex: 1,

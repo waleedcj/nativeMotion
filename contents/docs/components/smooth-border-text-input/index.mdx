@@ -43,6 +43,7 @@ import {
 	ViewStyle,
 	TextInputProps,
 	Text,
+	PixelRatio
 } from "react-native";
 import Animated, {
 	useAnimatedStyle,
@@ -77,8 +78,7 @@ export default function SmoothBorderTextInput(
 		SmoothBorderTextInputProps
 ) {
 	const inputRef = useRef<TextInput>(null);
-
-	// Animation value for the floating label
+	const fontScale = PixelRatio.getFontScale();
 	const animatedValue = useSharedValue(0);
 
 	const motion =
@@ -150,6 +150,7 @@ export default function SmoothBorderTextInput(
 					styles.container,
 					{
 						backgroundColor: props?.backgroundColor ?? "transparent",
+						height: DEFAULT_INPUT_HEIGHT * fontScale,
 					},
 					BorderStyle,
 				]}
@@ -160,6 +161,7 @@ export default function SmoothBorderTextInput(
 				<TextInput
 					ref={inputRef}
 					clearButtonMode="while-editing"
+					placeholderTextColor={props?.labelColor}
 					style={[
 						styles.input,
 						{
@@ -190,7 +192,6 @@ const styles = StyleSheet.create({
 		marginBlock: 4,
 		borderWidth: 1,
 		borderRadius: 12,
-		height: DEFAULT_INPUT_HEIGHT,
 	},
 	input: {
 		flex: 1,

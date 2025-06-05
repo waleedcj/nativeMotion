@@ -71,6 +71,7 @@ import {
 	TextStyle,
 	ListRenderItem,
 	useWindowDimensions,
+	PixelRatio,
 } from "react-native";
 import Animated, {
 	useSharedValue,
@@ -93,7 +94,7 @@ export type DropdownPickerItem = {
 
 type DropdownPickerProps<TItem extends DropdownPickerItem> = {
 	isOpen: boolean;
-	setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+	setIsOpen: (open: boolean) => void;
 	data: TItem[];
 	onItemSelected: (item: TItem) => void;
     inputHeight?: number;
@@ -133,8 +134,8 @@ const DropdownPicker = <TItem extends DropdownPickerItem>({
 	containerStyle,
 	itemHeight = 45, // Default estimated item height
 }: DropdownPickerProps<TItem>) => {
-	// const [isOpen, setIsOpen] = useState(false);
 	const animationProgress = useSharedValue(0);
+	const fontScale = PixelRatio.getFontScale();
 	const { height: windowHeight, width: windowWidth } = useWindowDimensions();
 	// Calculate default max height for the dropdown list part
 	const defaultListMaxHeight = dropdownMaxHeight || windowHeight * 0.4;
@@ -179,7 +180,7 @@ const DropdownPicker = <TItem extends DropdownPickerItem>({
 		const height = interpolate(
 			animationProgress.value,
 			[0, 1],
-			[INPUT_HEIGHT, INPUT_HEIGHT + (data.length > 0 ? listVisibleHeight : 0)], // No extra height if no data
+			[INPUT_HEIGHT * fontScale, (INPUT_HEIGHT * fontScale) + (data.length > 0 ? listVisibleHeight : 0)], // No extra height if no data
 			Extrapolation.CLAMP
 		);
 		return { height };
@@ -225,7 +226,7 @@ const DropdownPicker = <TItem extends DropdownPickerItem>({
 			<TouchableOpacity
 				activeOpacity={0.7}
 				onPress={toggleDropdown}
-				style={[styles.triggerArea, { height: INPUT_HEIGHT }, triggerContainerStyle]}
+				style={[styles.triggerArea, { height: INPUT_HEIGHT * fontScale}, triggerContainerStyle]}
 			>
 				<Text style={[styles.triggerText, triggerTextStyle]} numberOfLines={1}>
 					{selectedValue ? selectedValue.label : placeholder}
@@ -266,13 +267,7 @@ const DropdownPicker = <TItem extends DropdownPickerItem>({
 const styles = StyleSheet.create({
 	outerContainer: {
 		borderRadius: 8,
-		marginHorizontal: 16,
 		overflow: "hidden",
-		shadowColor: "#000",
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.1,
-		shadowRadius: 4,
-		elevation: 5,
 		zIndex: 1,
 	},
 	triggerArea: {
@@ -329,127 +324,188 @@ export default DropdownPicker;
 ## Usage
 
   ```typescript:DropdownPickerPage.tsx
-import React, { useState } from "react";
-import { View, Text, StyleSheet, SafeAreaView, Alert, ListRenderItem, TouchableOpacity } from "react-native";
-import DropdownPicker, { DropdownPickerItem } from "@/components/ui/DropdownPicker";
-import { useAppColors } from "@/hooks/useAppColors";
+import React, { useState, useMemo } from "react";
+import { View, Text, StyleSheet, SafeAreaView, ListRenderItem, TouchableOpacity, useWindowDimensions, Platform } from "react-native";
+import DropdownPicker, { DropdownPickerItem } from "@/components/ui/DropdownPicker"; // Adjust path
+import { useAppColors } from "@/hooks/useAppColors"; // Adjust path
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 interface MyCustomItem extends DropdownPickerItem {
-	// id, label, value are inherited
-	description?: string;
+    description?: string;
 }
 
-const sampleData: MyCustomItem[] = [
-	{ id: "1", label: "Toyota", value: "toyota", description: "Reliable Japanese brand" },
-	{ id: "2", label: "Honda", value: "honda", description: "Known for efficiency" },
-	{ id: "3", label: "Ford", value: "ford", description: "American classic" },
-	{ id: "4", label: "BMW", value: "bmw", description: "German luxury" },
-	{ id: "5", label: "Mercedes-Benz", value: "mercedes", description: "Premium engineering" },
-	{ id: "6", label: "Audi", value: "audi", description: "Progressive technology" },
-	{ id: "7", label: "Volkswagen", value: "vw", description: "People's car" },
-	{ id: "8", label: "Chevrolet", value: "chevy", description: "American heritage" },
-	{ id: "9", label: "Hyundai", value: "hyundai", description: "Value-oriented" },
-	{ id: "10", label: "Kia", value: "kia", description: "Modern design" },
-	{ id: "11", label: "Nissan", value: "nissan", description: "Innovation focus" },
-	{ id: "12", label: "Mazda", value: "mazda", description: "Driving dynamics" },
-	{ id: "13", label: "Subaru", value: "subaru", description: "All-wheel specialists" },
-	{ id: "14", label: "Lexus", value: "lexus", description: "Luxury comfort" },
-	{ id: "15", label: "Volvo", value: "volvo", description: "Safety priority" },
-	{ id: "16", label: "Porsche", value: "porsche", description: "Performance heritage" },
-	{ id: "17", label: "Tesla", value: "tesla", description: "Electric innovation" },
-	{ id: "18", label: "Jeep", value: "jeep", description: "Off-road capable" },
-	{ id: "19", label: "Land Rover", value: "landrover", description: "Luxury capability" },
-	{ id: "20", label: "Jaguar", value: "jaguar", description: "British elegance" },
-	{ id: "21", label: "Acura", value: "acura", description: "Premium Japanese" },
-	{ id: "22", label: "Cadillac", value: "cadillac", description: "American luxury" },
+const carMakesData: MyCustomItem[] = [
+    { id: "1", label: "Toyota", value: "toyota", description: "Reliable Japanese brand" },
+    { id: "2", label: "Honda", value: "honda", description: "Known for efficiency" },
+    { id: "3", label: "Ford", value: "ford", description: "American classic" },
+    { id: "4", label: "BMW", value: "bmw", description: "German luxury" },
+    { id: "5", label: "Tesla", value: "tesla", description: "Electric innovation"},
+];
+
+const carModelsData: MyCustomItem[] = [
+    { id: "m1", label: "Corolla", value: "corolla", description: "Toyota - Compact sedan" },
+    { id: "m2", label: "Civic", value: "civic", description: "Honda - Popular compact" },
+    { id: "m3", label: "F-150", value: "f150", description: "Ford - Best-selling truck" },
+    { id: "m4", label: "Model 3", value: "model3", description: "Tesla - Electric sedan" },
+    { id: "m5", label: "3 Series", value: "3series", description: "BMW - Sport sedan" },
+    { id: "m6", label: "Accord", value: "accord", description: "Honda - Mid-size sedan" },
+    { id: "m7", label: "Camry", value: "camry", description: "Toyota - Family sedan" },
 ];
 
 export default function DropdownPickerPage() {
-	const colors = useAppColors();
-	const [selectedCar, setSelectedCar] = useState<MyCustomItem | null>(null);
-	const [isPickerOpen, setIsPickerOpen] = useState(false);
+    const colors = useAppColors();
+    const { width: windowWidth } = useWindowDimensions();
 
-	const handleCarSelect = (item: MyCustomItem) => {
-		setSelectedCar(item);
-		setIsPickerOpen(false);
-		Alert.alert("Selected", `ID: ${item.id}, Value: ${item.value}, Label: ${item.label}`);
-	};
+    const [selectedMake, setSelectedMake] = useState<MyCustomItem | null>(null);
+    const [isMakePickerOpen, setIsMakePickerOpen] = useState(false);
 
-	// custom renderItem
-	const renderCustomDropdownItem: ListRenderItem<MyCustomItem> = ({ item }) => (
-		<TouchableOpacity
-			style={styles.customItem}
-			onPress={() => handleCarSelect(item)} // Ensure your custom item handles press
-		>
-			<Ionicons name="car-sport-outline" size={20} color={colors.PrimaryNormal} />
-			<View style={{ marginLeft: 10 }}>
-				<Text style={[styles.customItemLabel, { color: colors.Neutral900 }]}>{item.label}</Text>
-				{item.description && (
-					<Text style={[styles.customItemDesc, { color: colors.Neutral500 }]}>{item.description}</Text>
-				)}
-			</View>
-		</TouchableOpacity>
-	);
+    const [selectedModel, setSelectedModel] = useState<MyCustomItem | null>(null);
+    const [isModelPickerOpen, setIsModelPickerOpen] = useState(false);
 
-	return (
-		<SafeAreaView style={[styles.safeArea, { backgroundColor: colors.bgColor }]}>
-			<View style={styles.container}>
-				<Text style={[styles.title, { color: colors.Neutral900 }]}>Dropdown Picker</Text>
+    const handleMakeSelect = (item: MyCustomItem) => {
+        setSelectedMake(item);
+        setIsMakePickerOpen(false);
+        setSelectedModel(null); // Reset model if make changes
+    };
 
-				<DropdownPicker<MyCustomItem> // Specify the item type
-					data={sampleData}
-					isOpen={isPickerOpen}
-					setIsOpen={setIsPickerOpen}
-					onItemSelected={handleCarSelect}
-					selectedValue={selectedCar}
-					placeholder="Select Car Make"
-					renderItem={renderCustomDropdownItem}
-					// Styling Props
-					triggerContainerStyle={{ borderColor: colors.PrimaryNormal, backgroundColor: colors.Neutral0 }}
-					triggerTextStyle={{ color: colors.Neutral700 }}
-					triggerIcon={<Ionicons name="chevron-down-outline" size={24} color={colors.Neutral500} />}
-					reduceMotion="never"
-					dropdownBackgroundColor={colors.Neutral0}
-					dropdownItemTextStyle={{ color: colors.Neutral700 }}
-					dropdownSeparatorColor={colors.Neutral500}
-					containerStyle={{ marginBottom: 20, zIndex: 10 }}
-				/>
-			</View>
-		</SafeAreaView>
-	);
+    const handleModelSelect = (item: MyCustomItem) => {
+        setSelectedModel(item);
+        setIsModelPickerOpen(false);
+    };
+
+    // Toggling functions to ensure only one picker is open at a time
+    const toggleMakePicker = (open: boolean) => {
+        setIsMakePickerOpen(open);
+        if (open && isModelPickerOpen) {
+            setIsModelPickerOpen(false);
+        }
+    };
+
+    const toggleModelPicker = (open: boolean) => {
+        setIsModelPickerOpen(open);
+        if (open && isMakePickerOpen) {
+            setIsMakePickerOpen(false);
+        }
+    };
+    
+   // width calculation
+    const pickerWidth = useMemo(() => {
+        const totalPadding = styles.container.paddingHorizontal * 2;
+        const gapBetweenPickers = styles.pickersRow.gap | 10;
+        return (windowWidth - totalPadding - gapBetweenPickers) / 2;
+    }, [windowWidth]);
+
+
+    const renderCustomDropdownItem: ListRenderItem<MyCustomItem> = ({ item }) => (
+        <TouchableOpacity
+            style={[styles.customItem, { backgroundColor: colors.Neutral0 }]}
+            onPress={() => {
+                // Determine which picker this item belongs to or pass a specific handler
+                if (carMakesData.find(d => d.id === item.id)) {
+                    handleMakeSelect(item);
+                } else {
+                    handleModelSelect(item);
+                }
+            }}
+        >
+            {item.iconName && <Ionicons name={item.iconName} size={20} color={colors.PrimaryNormal} />}
+            <View style={{ marginLeft: item.iconName ? 10 : 0, flex: 1 }}>
+                <Text style={[styles.customItemLabel, { color: colors.Neutral900 }]}>{item.label}</Text>
+                {item.description && (
+                    <Text style={[styles.customItemDesc, { color: colors.Neutral500 }]} numberOfLines={1}>
+                        {item.description}
+                    </Text>
+                )}
+            </View>
+        </TouchableOpacity>
+    );
+
+    return (
+        <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.bgColor }]}>
+            <View style={styles.container}>
+                <Text style={[styles.title, { color: colors.Neutral900 }]}>Select Vehicle</Text>
+
+                <View style={styles.pickersRow}>
+                    <DropdownPicker<MyCustomItem>
+                        data={carMakesData}
+                        isOpen={isMakePickerOpen}
+                        setIsOpen={toggleMakePicker}
+                        onItemSelected={handleMakeSelect}
+                        selectedValue={selectedMake}
+                        placeholder="Select Make"
+                        renderItem={renderCustomDropdownItem}
+                        triggerIcon={<Ionicons name="chevron-down-outline" size={22} color={colors.Neutral500} />}
+                        dropdownBackgroundColor={colors.Neutral0}
+                        dropdownItemTextStyle={{ color: colors.Neutral700 }}
+                        triggerTextStyle={{ color: colors.Neutral700 }}
+                        containerStyle={{ 
+                            width: pickerWidth, 
+                        }} 
+                        itemHeight={Platform.OS === 'ios' ? 55 : 60}
+						reduceMotion="never"
+                    />
+                    <DropdownPicker<MyCustomItem>
+                        data={carModelsData.filter(model => selectedMake ? model.description?.startsWith(selectedMake.label) : true)} // Example: Filter models by make
+                        isOpen={isModelPickerOpen}
+                        setIsOpen={toggleModelPicker} 
+                        onItemSelected={handleModelSelect}
+                        selectedValue={selectedModel}
+                        placeholder="Select Model"
+                        renderItem={renderCustomDropdownItem}
+                        triggerIcon={<Ionicons name="chevron-down-outline" size={22} color={colors.Neutral500} />}
+                        dropdownBackgroundColor={colors.Neutral0}
+                        dropdownItemTextStyle={{ color: colors.Neutral700 }}
+                        triggerTextStyle={{ color: colors.Neutral700 }}
+						triggerContainerStyle={{ borderColor: colors.PrimaryNormal, backgroundColor: colors.Neutral0 }}
+						reduceMotion="never"
+						
+						dropdownSeparatorColor={colors.Neutral500}
+						containerStyle={{ 
+                            width: pickerWidth, 
+                        }}
+                        itemHeight={Platform.OS === 'ios' ? 55 : 60} // Adjust if custom items are talle
+                    />
+                </View>
+            </View>
+        </SafeAreaView>
+    );
 }
 
 const styles = StyleSheet.create({
-	safeArea: { flex: 1 },
-	container: {
-		flex: 1,
-		padding: 20,
-		alignItems: "center", // Center dropdown for demo
-	},
-	title: {
-		fontSize: 22,
-		fontWeight: "bold",
-		marginBottom: 30,
-	},
-	selectedValueText: {
-		marginTop: 20,
-		fontSize: 16,
-	},
-	// For custom renderItem example
-	customItem: {
-		flexDirection: "row",
-		alignItems: "center",
-		paddingVertical: 12,
-		paddingHorizontal: 16,
-	},
-	customItemLabel: {
-		fontSize: 16,
-		fontWeight: "500",
-	},
-	customItemDesc: {
-		fontSize: 12,
-	},
+    safeArea: { flex: 1 },
+    container: {
+        flex: 1,
+        paddingHorizontal: 16,
+        paddingTop: 30,
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: "bold",
+        marginBottom: 25,
+        textAlign: "center",
+    },
+    pickersRow: {
+        flexDirection: "row",
+        justifyContent: "space-between", 
+        alignItems: "flex-start", 
+        width: "100%",
+        marginBottom: 30,
+		gap: 10,
+    },
+    customItem: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+    },
+    customItemLabel: {
+        fontSize: 16,
+        fontWeight: "500",
+    },
+    customItemDesc: {
+        fontSize: 13,
+        marginTop: 2,
+    },
 });
   ```
 
@@ -458,7 +514,7 @@ const styles = StyleSheet.create({
 | Prop                      | Type                                                     | Default                | Required | Description                                                                                                                               |
 | :------------------------ | :------------------------------------------------------- | :--------------------- | :------- | :---------------------------------------------------------------------------------------------------------------------------------------- |
 | `isOpen`                  | `boolean`                                                |                        | Yes      | Controls whether the dropdown list is currently open or closed.                                                                             |
-| `setIsOpen`               | `React.Dispatch<React.SetStateAction<boolean>>`          |                        | Yes      | Function to update the `isOpen` state, typically from a parent component.                                                                 |
+| `setIsOpen`               | `(open: boolean) => void;`         					   |                        | Yes      | Function to update the `isOpen` state, typically from a parent component.                                                                 |
 | `data`                    | `TItem[]` (where TItem extends DropdownPickerItem)       |                        | Yes      | An array of item objects to display in the dropdown. Each item must have `id`, `label`, and `value`.                                      |
 | `onItemSelected`          | `(item: TItem) => void`                                  |                        | Yes      | Callback function triggered when an item is selected from the dropdown list.                                                              |
 | `inputHeight`             | `number`                                                 | `60` (INPUT_HEIGHT)    | No       | The height of the touchable trigger area of the dropdown. (Note: `INPUT_HEIGHT` is used in the code, might need to be exposed or consistent) |

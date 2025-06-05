@@ -48,6 +48,7 @@ import {
 	ViewStyle,
 	Text,
 	TextInputProps,
+	PixelRatio,
   } from "react-native";
   import Animated, {
 	useAnimatedStyle,
@@ -87,6 +88,7 @@ import {
 	  Readonly<TextInputProps> &
 	  FloatingTextInputProps
   ) {
+	const fontScale = PixelRatio.getFontScale();
 	const [isFocused, setIsFocused] = useState(false);
 	const inputRef = useRef<TextInput>(null);
 	const animatedValue = useSharedValue(0);
@@ -105,10 +107,11 @@ import {
 	  const height =
 		typeof flatStyle?.height === "number"
 		  ? flatStyle.height
-		  : DEFAULT_INPUT_HEIGHT;
+		  : DEFAULT_INPUT_HEIGHT * fontScale;
+	
 	  // Get label font size from props (if you were to make it configurable) or use default
 	  // For now, using the default defined above. You could also extract from styles.label if needed.
-	  const fontSize = DEFAULT_LABEL_FONT_SIZE;
+	  const fontSize = DEFAULT_LABEL_FONT_SIZE * fontScale;
 	  return { inputHeight: height, labelFontSize: fontSize };
 	}, [props.style]); // Recalculate only if props.style changes
   
@@ -198,6 +201,7 @@ import {
 			{props?.label}
 		  </Animated.Text>
 		  <TextInput
+		  	accessibilityLabel={props.label}
 			ref={inputRef}
 			clearButtonMode="always"
 			style={[

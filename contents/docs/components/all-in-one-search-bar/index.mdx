@@ -261,6 +261,7 @@ import {
 	Keyboard,
 	Dimensions,
 	ActivityIndicator,
+	PixelRatio,
 } from "react-native";
 import Animated, {
 	useSharedValue,
@@ -309,6 +310,7 @@ const SearchBar: React.FC<AnimatedSearchBarProps> = ({
 	recentSearchesTitleColor = "#333",
 	searchStartIcon,
 }) => {
+	const fontScale = PixelRatio.getFontScale();
 	const [searchTerm, setSearchTerm] = useState("");
 	const [isFocused, setIsFocused] = useState(false);
 	const { recentSearches, addRecentSearch, removeRecentSearch, isLoaded } = useRecentSearchesStore();
@@ -390,7 +392,7 @@ const SearchBar: React.FC<AnimatedSearchBarProps> = ({
 		const height = interpolate(
 			animationProgress.value,
 			[0, 1],
-			[INPUT_HEIGHT, HISTORY_HEIGHT + PADDING_VERTICAL],
+			[INPUT_HEIGHT * fontScale, HISTORY_HEIGHT + PADDING_VERTICAL],
 			Extrapolation.CLAMP
 		);
 		return {
@@ -449,7 +451,7 @@ const SearchBar: React.FC<AnimatedSearchBarProps> = ({
 				animatedContainerStyle,
 			]}
 		>
-			<View style={styles.inputRow}>
+			<View style={[styles.inputRow, {height: INPUT_HEIGHT * fontScale}]}>
 				{searchStartIcon}
 				<TextInput
 					ref={inputRef}
@@ -533,7 +535,6 @@ const styles = StyleSheet.create({
 	inputRow: {
 		flexDirection: "row",
 		alignItems: "center",
-		height: INPUT_HEIGHT,
 		paddingHorizontal: 12,
 	},
 	searchResultsListContainer: {
