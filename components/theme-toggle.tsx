@@ -21,7 +21,7 @@ export function ModeToggle() {
   if (!mounted) {
     return (
       <Button variant="ghost" size="icon" disabled>
-        <MyIcons.SunIcon className="h-[1.1rem] w-[1.1rem]" />
+        <MyIcons.SunIcon  color="#eab308" className=" absolute h-[1.1rem] w-[1.1rem]" />
         <span className="sr-only">Toggle theme</span>
       </Button>
     );

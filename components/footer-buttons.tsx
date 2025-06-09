@@ -4,7 +4,7 @@ import { ModeToggle } from "@/components/theme-toggle";
 
 export function FooterButtons() {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex relative items-center gap-2">
       <Button variant="ghost" size="icon" asChild>
         <a
           href="https://github.com/waleedcj/nativeMotion"
