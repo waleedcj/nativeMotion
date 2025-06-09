@@ -11,10 +11,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // You might need to fetch lastModified date for each page if you want to include it
     // For simplicity, using a static date or omitting it for now
     return {
-      url: `${SITE_URL}${item.href}`, // Ensure item.href starts with '/' e.g., /docs/slug
+      url: `${SITE_URL}/docs/${item.href}`, // Ensure item.href starts with '/' e.g., /docs/slug
       lastModified: new Date(), // Or fetch from frontmatter/git history
       changeFrequency: 'weekly' as const, // Or 'monthly', 'daily'
-      priority: item.href === '/docs' || item.href === '/' ? 1 : 0.8, // Example priority
+      priority: 1
     };
   });
 
@@ -25,6 +25,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: 'monthly' as const,
       priority: 1,
+    },
+    {
+      url: `${SITE_URL}/blog`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
     },
     // ... other static pages
   ];
