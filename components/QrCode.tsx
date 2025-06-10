@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
-import Image from "next/image"; // Import next/image
+import Image from "next/image";
 import animationData from "@/public/qrcode.json";
+import { ExternalLink } from "lucide-react";
 
 // Dynamically import Lottie for client-side only rendering
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
@@ -104,7 +105,7 @@ export function QrCode() {
             {/* QR Code Image */}
             <div className="bg-white p-2 sm:p-3 rounded-md inline-block shadow-md">
               <Image
-                src={'https://cdn.jsdelivr.net/gh/waleedcj/EziuiAssets@main/eas-update.svg'}
+                src={'https://cdn.jsdelivr.net/gh/waleedcj/EziuiAssets@main/eas-updateV1.svg'}
                 alt="Expo Go QR Code"
                 width={220} // Adjust to the natural width of your QR image or desired display width
                 height={220} // Adjust to the natural height of your QR image or desired display height
@@ -113,9 +114,23 @@ export function QrCode() {
                 className="rounded-sm" // Optional: if the QR code image itself doesn't have rounded corners and you want them
               />
             </div>
-            <p className="mt-3 text-xs text-neutral-500">
-              Point your device&apos;s camera or the Expo Go app at the QR code.
-            </p>
+            <div className="mt-4">
+              <p className="mb-2 text-sm text-neutral-600">
+                Or open directly in Expo Go:
+              </p>
+              <a
+                href={"exp://u.expo.dev/f9c40f35-634f-4bc1-be5e-001b77476a82/group/e1132dba-f786-480b-95ab-9c28f7007e66"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-neutral-900 bg-neutral-300 hover:bg-neutral-500 transition-colors w-full break-all"
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Open in Expo Go
+              </a>
+              <p className="mt-3 text-xs text-neutral-500">
+                Point your device&apos;s camera or the Expo Go app at the QR code above, or tap the button.
+              </p>
+            </div>
           </div>
         </div>
       )}

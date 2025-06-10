@@ -5,6 +5,7 @@ import { Space_Mono, DM_Sans, Plus_Jakarta_Sans } from "next/font/google";
 import { Footer } from "@/components/footer";
 import "@/styles/globals.css";
 import Script from "next/script";
+import { QrCode } from "@/components/QrCode";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -65,6 +66,7 @@ export default function RootLayout({
               {children}
             </main>
             <Footer />
+            <QrCode />
           </div>
         </ThemeProvider>
       </body>
