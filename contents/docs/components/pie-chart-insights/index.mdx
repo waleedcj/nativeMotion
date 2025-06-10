@@ -352,10 +352,11 @@ Provide an array of PieChartDataItem objects to the data prop, and optionally cu
 
   ```typescript:MyInsightsPage.tsx
 import React from "react";
-import { SafeAreaView, ScrollView, StyleSheet, View, Text } from "react-native";
+import { ScrollView, StyleSheet, View, Text } from "react-native";
 import PieChartInsights, {
 	PieChartDataItem,
 } from "@/components/ui/PieChartInsights";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppColors } from "@/hooks/useAppColors";
 
 // Example utility if you still have it and want to use it

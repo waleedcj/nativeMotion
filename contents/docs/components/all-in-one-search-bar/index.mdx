@@ -598,7 +598,6 @@ demonstrates the SearchBar component within a scrollable layout featuring sectio
   ```typescript:SearchBarPage.tsx
 import React from "react";
 import {
-	SafeAreaView,
 	StyleSheet,
 	Text,
 	View,
@@ -610,6 +609,7 @@ import {
 	Dimensions,
 	Platform,
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import SearchBar from "@/components/ui/SearchBar";
 import { useAppColors } from "@/hooks/useAppColors";
 import { Ionicons } from "@expo/vector-icons";

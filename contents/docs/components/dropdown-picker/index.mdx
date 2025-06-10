@@ -326,7 +326,8 @@ export default DropdownPicker;
 
   ```typescript:DropdownPickerPage.tsx
 import React, { useState, useMemo } from "react";
-import { View, Text, StyleSheet, SafeAreaView, ListRenderItem, TouchableOpacity, useWindowDimensions, Platform } from "react-native";
+import { View, Text, StyleSheet, ListRenderItem, TouchableOpacity, useWindowDimensions, Platform } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import DropdownPicker, { DropdownPickerItem } from "@/components/ui/DropdownPicker"; // Adjust path
 import { useAppColors } from "@/hooks/useAppColors"; // Adjust path
 import Ionicons from "@expo/vector-icons/Ionicons";
