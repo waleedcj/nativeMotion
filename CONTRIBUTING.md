@@ -27,9 +27,9 @@ Our primary focus for direct code contributions will be on new React Native comp
 
 If you wish to contribute to the documentation site itself (e.g., improving layout, fixing typos, adding examples to MDX files):
 
-1.  **Fork the Repository:** Click the "Fork" button at the top right of the [Native Motion GitHub page](https://github.com/your-username/native-motion).
-2.  **Clone Your Fork:** `git clone https://github.com/YOUR_USERNAME/native-motion.git`
-3.  **Navigate to Project Directory:** `cd native-motion`
+1.  **Fork the Repository:** Click the "Fork" button at the top right of the [Native Motion GitHub page](https://github.com/waleedcj/nativeMotion).
+2.  **Clone Your Fork:** `git clone https://github.com/waleedcj/nativeMotion.git`
+3.  **Navigate to Project Directory:** `cd nativeMotion`
 4.  **Install Dependencies:** We use `pnpm` (but specify if you use `npm` or `yarn` primarily for the docs site).
     ```bash
     pnpm install
@@ -76,7 +76,7 @@ If you're submitting a new React Native component or improvements to an existing
 ## Submission Process for New Components or Significant Changes
 
 1.  **Open an Issue First (Highly Recommended):**
-    *   Before starting significant work on a new component or a major refactor, please [open an issue](https://github.com/your-username/native-motion/issues/new/choose) to discuss your idea.
+    *   Before starting significant work on a new component or a major refactor, please [open an issue](https://github.com/waleedcj/nativeMotion/issues/new) to discuss your idea.
     *   This allows us to provide feedback, ensure it aligns with the project's goals, and avoid duplicated effort.
     *   Describe the component, its features, and its potential value to the community.
 
@@ -121,6 +121,6 @@ We are excited to feature components developed by the community!
 
 ## Questions?
 
-If you have any questions about contributing, feel free to open an issue or reach out to us on [mention your preferred communication channel if you have one, e.g., a Discord server, Twitter].
+If you have any questions about contributing, feel free to open an issue or reach out to me on X [waleedcj](https://x.com/waleed_CJ16).
 
 Thank you for helping make Native Motion awesome!
