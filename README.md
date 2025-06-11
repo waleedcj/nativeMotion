@@ -61,7 +61,7 @@ We welcome contributions to Native Motion! Whether it's reporting a bug, suggest
 
 *   **Report Bugs or Request Features:** Please use the [GitHub Issues](https://github.com/your-username/native-motion/issues) tab.
 *   **Code Contributions:**
-    1.  Please read our `CONTRIBUTING.md` (this file will need to be created) for details on our code of conduct, development setup, and the process for submitting pull requests.
+    1.  Please read our [CONTRIBUTING.md](https://github.com/waleedcj/nativeMotion/blob/main/CONTRIBUTING.md) for details on our code of conduct, development setup, and the process for submitting pull requests.
     2.  Fork the repository.
     3.  Create your feature branch (`git checkout -b feature/NewAwesomeComponent`).
     4.  Make your changes and commit them (`git commit -m 'Add: NewAwesomeComponent with X functionality'`).
