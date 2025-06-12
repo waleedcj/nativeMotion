@@ -4,10 +4,6 @@ First off, thank you for considering contributing to Native Motion! We're excite
 
 This document provides guidelines for contributing to Native Motion. Please read it carefully to ensure a smooth and effective collaboration process.
 
-## Code of Conduct
-
-All contributors are expected to adhere to our [Code of Conduct](CODE_OF_CONDUCT.md). Please make sure you are familiar with its contents. We are committed to fostering an open and welcoming environment.
-
 ## How Can I Contribute?
 
 There are many ways you can contribute to Native Motion:
