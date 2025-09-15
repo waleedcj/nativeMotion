@@ -105,7 +105,7 @@ export function QrCode() {
             {/* QR Code Image */}
             <div className="bg-white p-2 sm:p-3 rounded-md inline-block shadow-md">
               <Image
-                src={'https://cdn.jsdelivr.net/gh/waleedcj/EziuiAssets@main/eas-updateV1.svg'}
+                src={'https://cdn.jsdelivr.net/gh/waleedcj/EziuiAssets@main/eas-updateV2.svg'}
                 alt="Expo Go QR Code"
                 width={220} // Adjust to the natural width of your QR image or desired display width
                 height={220} // Adjust to the natural height of your QR image or desired display height

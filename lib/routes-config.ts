@@ -63,6 +63,7 @@ export const ROUTES: EachRoute[] = [
       {title: "Pie Chart Insights", href: "/pie-chart-insights"},
       {title: "All In One Search Bar", href: "/all-in-one-search-bar"},
       {title: "Dropdown Picker", href: "/dropdown-picker"},
+      {title: "Real Time Crypto Price Card", href: "/single-crypto-card", tag: "New"},
     ],
   },
   {
@@ -73,6 +74,7 @@ export const ROUTES: EachRoute[] = [
       {title: "Dynamic Credit Card Form", href: "/card-info-animated-form"},
       {title: "Signup Form", href: "/signup-form"},
       {title: "Onboarding", href: "/onboarding"},
+      {title: "Crypto Price Card List", href: "/crypto-card-list", tag: "New"},
     ]
   },
 ];

@@ -1,0 +1,1048 @@
+---
+title: Real Time Crypto Price Card List
+description: Infinite-scrolling list of cryptocurrencies using Shopify's FlashList, with each item rendered as a customizable card showing price, trends, and a historical line graph. It fetches and paginates data from the CoinGecko API, handling api rate limiting, loading and error states.
+tags: [react-native, flashlist, infinite-scroll, react-query, typescript, data-fetching, list-view, crypto, performance, tanstack-query, finance, screen]
+keywords: [
+    "react native flashlist example", "shopify flashlist infinite scroll", "react native high performance list",
+    "tanstack query useinfinitequery", "react native crypto list screen", "paginated data react native",
+    "fetch more on scroll", "crypto market data list", "virtualized list react native", "optimize flatlist performance",
+    "react native activityindicator footer", "coingecko api list example", "data-driven list component",
+    "react native financial app", "infinite loading list", "onendreached flashlist", "crypto price list",
+    "react native error handling ui", "customizable list item component", "data fetching hooks",
+    "expo crypto app example", "list footer loading spinner", "deduplicate array data",
+    "crypto card component", "market cap list react native", "react native list optimization"
+    ]
+author: "walid memon"
+ogImage: "/cryptolist.png"
+lastModified: "2025-09-14T10:00:00Z"
+---
+
+
+## Preview
+
+<Video src="https://cdn.jsdelivr.net/gh/waleedcj/EziuiAssets/coinlist.mp4"  aria-label='search bar' />
+
+## Installation
+
+
+  <Stepper>
+  <StepperItem title="Step 1: Install Dependencies">
+    ```plaintext
+    npx expo install react-native-svg @shopify/flash-list
+    ```
+    We will be using `tanstack` query for managing our queries
+
+    ```plaintext
+    npm i @tanstack/react-query 
+    ```
+  </StepperItem>
+
+  <StepperItem title="Step 2: Create a a file types/coinGecko.types.ts">
+    types that model the JSON response structure from the CoinGecko API.
+
+  
+  ```typescript:coinGecko.types.ts
+/**
+ * Represents the currency-specific price data for various metrics.
+ */
+type CurrencyData = {
+    aed: number;
+    ars: number;
+    aud: number;
+    bch: number;
+    bdt: number;
+    bhd: number;
+    bmd: number;
+    bnb: number;
+    brl: number;
+    btc: number;
+    cad: number;
+    chf: number;
+    clp: number;
+    cny: number;
+    czk: number;
+    dkk: number;
+    dot: number;
+    eos: number;
+    eth: number;
+    eur: number;
+    gbp: number;
+    gel: number;
+    hkd: number;
+    huf: number;
+    idr: number;
+    ils: number;
+    inr: number;
+    jpy: number;
+    krw: number;
+    kwd: number;
+    lkr: number;
+    ltc: number;
+    mmk: number;
+    mxn: number;
+    myr: number;
+    ngn: number;
+    nok: number;
+    nzd: number;
+    php: number;
+    pkr: number;
+    pln: number;
+    rub: number;
+    sar: number;
+    sek: number;
+    sgd: number;
+    sol: number;
+    thb: number;
+    try: number;
+    twd: number;
+    uah: number;
+    usd: number;
+    vef: number;
+    vnd: number;
+    xag: number;
+    xau: number;
+    xdr: number;
+    xlm: number;
+    xrp: number;
+    yfi: number;
+    zar: number;
+    bits: number;
+    link: number;
+    sats: number;
+  }
+
+  export type Currency = keyof CurrencyData;
+
+  export type TimeFrame = "24h" | "7d" | "30d" | "1y";
+  
+  /**
+   * Represents the currency-specific date data for ATH/ATL.
+   */
+  type CurrencyDateData = {
+    [currency: string]: string; // Allows any currency code as a key
+  }
+  
+  /**
+   * Represents links to code repositories.
+   */
+  type ReposUrl = {
+    github: string[];
+    bitbucket: string[];
+  }
+  
+  /**
+   * Represents all external links related to the coin.
+   */
+  type Links = {
+    homepage: string[];
+    whitepaper: string;
+    blockchain_site: string[];
+    official_forum_url: string[];
+    chat_url: string[];
+    announcement_url: string[];
+    snapshot_url: string | null;
+    twitter_screen_name: string;
+    facebook_username: string;
+    bitcointalk_thread_identifier: number | null;
+    telegram_channel_identifier: string;
+    subreddit_url: string;
+    repos_url: ReposUrl;
+  }
+  
+  /**
+   * Represents different sizes of the coin's image.
+   */
+  type Image = {
+    thumb: string;
+    small: string;
+    large: string;
+  }
+  
+  /**
+   * Represents the detailed market data for the coin.
+   */
+  type MarketData = {
+    current_price: CurrencyData;
+    total_value_locked: null; // Or a specific type if it can have a value
+    mcap_to_tvl_ratio: null;
+    fdv_to_tvl_ratio: null;
+  
+    // All-time high price in various currencies
+    ath: CurrencyData;
+    // Percentage change from all-time high in various currencies
+    ath_change_percentage: CurrencyData;
+    // Date of all-time high in various currencies
+    ath_date: CurrencyDateData;
+  
+    // All-time low price in various currencies
+    atl: CurrencyData;
+    // Percentage change from all-time low in various currencies
+    atl_change_percentage: CurrencyData;
+    // Date of all-time low in various currencies
+    atl_date: CurrencyDateData;
+  
+    // Market capitalization in various currencies
+    market_cap: CurrencyData;
+    market_cap_rank: number;
+    
+    // Fully diluted valuation in various currencies
+    fully_diluted_valuation: CurrencyData;
+    market_cap_fdv_ratio: number;
+    
+    // Total volume in various currencies
+    total_volume: CurrencyData;
+  
+    // High and low price in the last 24h in various currencies
+    high_24h: CurrencyData;
+    low_24h: CurrencyData;
+    
+    price_change_24h: number;
+    price_change_percentage_24h: number;
+    price_change_percentage_7d: number;
+    price_change_percentage_14d: number;
+    price_change_percentage_30d: number;
+    price_change_percentage_60d: number;
+    price_change_percentage_200d: number;
+    price_change_percentage_1y: number;
+  
+    market_cap_change_24h: number;
+    market_cap_change_percentage_24h: number;
+  
+    // Price changes over various time frames in different currencies
+    price_change_24h_in_currency: CurrencyData;
+    price_change_percentage_1h_in_currency: CurrencyData;
+    price_change_percentage_24h_in_currency: CurrencyData;
+    price_change_percentage_7d_in_currency: CurrencyData;
+    price_change_percentage_14d_in_currency: CurrencyData;
+    price_change_percentage_30d_in_currency: CurrencyData;
+    price_change_percentage_60d_in_currency: CurrencyData;
+    price_change_percentage_200d_in_currency: CurrencyData;
+    price_change_percentage_1y_in_currency: CurrencyData;
+    
+    market_cap_change_24h_in_currency: CurrencyData;
+    market_cap_change_percentage_24h_in_currency: CurrencyData;
+    
+    total_supply: number;
+    max_supply: number | null;
+    circulating_supply: number;
+    last_updated: string;
+  }
+  
+  /**
+   * The main type for the full response from the /coins/{id} endpoint.
+   */
+  export type CoinDetail = {
+    id: string;
+    symbol: string;
+    name: string;
+    web_slug: string;
+    asset_platform_id: null; // Or a specific type
+    platforms: { [key: string]: string };
+    detail_platforms: { [key: string]: { decimal_place: number | null; contract_address: string } };
+    block_time_in_minutes: number;
+    hashing_algorithm: string;
+    categories: string[];
+    preview_listing: boolean;
+    public_notice: null; // Or string
+    additional_notices: any[];
+    description: { [language_code: string]: string };
+    links: Links;
+    image: Image;
+    country_origin: string;
+    genesis_date: string; // ISO 8601 date string
+    sentiment_votes_up_percentage: number;
+    sentiment_votes_down_percentage: number;
+    watchlist_portfolio_users: number;
+    market_cap_rank: number;
+    market_data: MarketData;
+    status_updates: any[]; // Or a specific type if you know the structure
+    last_updated: string; // ISO 8601 date string
+  }
+  ```
+
+  </StepperItem>
+
+  <StepperItem title="Step 3: Add a utility throttledFetch.ts">
+ An utility that wraps the standard fetch call to control the frequency of API requests, preventing rate-limit errors from api
+
+     ```typescript:throttledFetch.ts
+  // This queue will hold all pending requests.
+// Each item will be a promise's resolve/reject functions and the fetch arguments.
+const requestQueue: {
+        url: string;
+        options: RequestInit;
+        resolve: (value: any) => void;
+        reject: (reason?: any) => void;
+  }[] = [];
+  
+  let isProcessing = false;
+  const RATE_LIMIT_INTERVAL = 2100; // 30 requests/min is 1 every 2s. We add a 100ms buffer.
+  
+  /**
+   * Processes the request queue one by one, with a delay between each request.
+   */
+  function processQueue() {
+        if (isProcessing) return; // Don't start a new interval if one is already running
+        isProcessing = true;
+    
+        const intervalId = setInterval(async () => {
+        if (requestQueue.length === 0) {
+            // If the queue is empty, stop the interval and mark as not processing.
+            clearInterval(intervalId);
+            isProcessing = false;
+            return;
+        }
+    
+        // Get the next request from the front of the queue.
+        const nextRequest = requestQueue.shift();
+        if (nextRequest) {
+            try {
+            const response = await fetch(nextRequest.url, nextRequest.options);
+            if (!response.ok) {
+                const errorData = await response.json();
+                // Reject the specific promise for this request with the error.
+                nextRequest.reject(new Error(errorData.error || 'API request failed'));
+            } else {
+                const data = await response.json();
+                // Resolve the specific promise for this request with the data.
+                nextRequest.resolve(data);
+            }
+            } catch (error) {
+            nextRequest.reject(error);
+            }
+        }
+        }, RATE_LIMIT_INTERVAL);
+  }
+  
+  /**
+   * A throttled version of fetch. Instead of fetching immediately, it adds
+   * the request to a queue that is processed at a rate-limit-friendly speed.
+   * @param url The URL to fetch.
+   * @param options The fetch options.
+   * @returns A promise that resolves/rejects when the request is eventually processed.
+   */
+  export const throttledFetch = (url: string, options: RequestInit): Promise<any> => {
+    return new Promise((resolve, reject) => {
+      // Add the new request to the end of the queue.
+      requestQueue.push({ url, options, resolve, reject });
+      // Start processing the queue if it's not already running.
+      processQueue();
+    });
+  };
+    ```
+  </StepperItem>
+
+  <StepperItem title="Step 4: Create a file hooks/useCryptoData.ts">
+    Provides a collection of custom TanStack Query hooks to fetch, cache, and manage cryptocurrency market data, price history, and details from the CoinGecko API.
+
+    ```typescript:useCryptoData.ts
+  import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
+import { throttledFetch } from '@/lib/apiClient';
+import { CoinDetail } from '@/types/coinGecko.types';
+import { Currency, TimeFrame } from "@/types/coinGecko.types";
+
+export type Roi = {
+  times: number;
+  currency: string;
+  percentage: number;
+}
+
+// types
+export type Coin = {
+  id: string;
+  symbol: string;
+  name: string;
+  image: string;
+  current_price: number;
+  market_cap: number;
+  market_cap_rank: number;
+  fully_diluted_valuation: number | null;
+  total_volume: number;
+  high_24h: number;
+  low_24h: number;
+  price_change_24h: number;
+  price_change_percentage_24h: number;
+  market_cap_change_24h: number;
+  market_cap_change_percentage_24h: number;
+  circulating_supply: number;
+  total_supply: number | null;
+  max_supply: number | null;
+  ath: number;
+  ath_change_percentage: number;
+  ath_date: string;
+  atl: number;
+  atl_change_percentage: number;
+  atl_date: string;
+  roi: Roi | null;
+  last_updated: string;
+  price_change_percentage_24h_in_currency: number;
+  price_change_percentage_7d_in_currency: number;
+  price_change_percentage_30d_in_currency: number;
+  price_change_percentage_1y_in_currency: number;
+}
+
+// Type for the full API response object
+export type CoinApiResponse = {
+  data: Coin[];
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+}
+
+const COINGECKO_API_KEY = 'your-api-key';
+
+/**
+ * Fetches a paginated list of all coins from the CoinGecko API.
+ *
+ * @param page - The page number to fetch (default: 1)
+ * @param pageSize - The number of coins per page (default: 10)
+ * @param timeFrame - The time frame for price change percentage (default: '24h'). 
+ *                    Accepts '24h', '7d', '30d' or 1y.
+ * @returns A Promise that resolves to an array of Coin objects.
+ */
+const fetchAllCoins = async (page: number = 1, pageSize: number = 10, timeFrame: TimeFrame = '24h', currency: Currency): Promise<Coin[]> => {
+  const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&price_change_percentage=${timeFrame}&order=market_cap_desc&per_page=${pageSize}&page=${page}`;
+  
+  const options = {
+    method: 'GET',
+    headers: {
+      'x-cg-demo-api-key': COINGECKO_API_KEY,
+    },
+  };
+
+  try {
+    const response = await fetch(url, options);
+
+    if (!response.ok) {
+      // If the response is not OK, try to read it as text first.
+      const errorText = await response.text();
+      console.error("API Error Response Text:", errorText);
+
+      if (errorText.toLowerCase().includes('throttled')) {
+        throw new Error('Rate limit exceeded. Please wait a moment.');
+      }
+      
+      // If it's something else, try to parse it as JSON, or just throw the text.
+      try {
+          const errorJson = JSON.parse(errorText);
+          throw new Error(errorJson.error || 'An unknown API error occurred');
+      } catch (e) {
+          throw new Error(`API returned status ${response.status}: ${errorText}`);
+      }
+    }
+    
+    return response.json();
+
+  } catch (error) {
+    // This will catch network errors (e.g., no internet)
+    console.error("Fetch operation failed:", error);
+    throw error; // Re-throw the error for TanStack Query to handle
+  }
+};
+
+
+/**
+ * Fetches the OHLC price history for a single coin from the official CoinGecko API.
+ * @param coinId - The string ID of the coin (e.g., "bitcoin")
+ * @param days - The number of days for the history (e.g., 7)
+ */
+const fetchCoinOhlc = async (coinId: string, days: number = 7, currency: Currency): Promise<number[]> => {
+  // Construct the URL using the coinId string directly
+  const url = `https://api.coingecko.com/api/v3/coins/${coinId}/ohlc?vs_currency=${currency}&days=${days}`;
+  
+  const options = {
+        method: 'GET',
+        headers: {
+        'x-cg-demo-api-key': COINGECKO_API_KEY,
+        },
+  };
+
+  const response = await fetch(url, options);
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error("CoinGecko OHLC API Error:", errorData);
+    throw new Error(errorData.error || 'Failed to fetch OHLC data');
+  }
+
+  // The new data structure is an array of arrays: [timestamp, open, high, low, close]
+  const data: [number, number, number, number, number][] = await throttledFetch(url, options); //throttledFetch is you using free version of the api, added due to rate limits 
+  
+  // We need to extract the 5th element (index 4), which is the closing price.
+  return data.map(pricePoint => pricePoint[4]);
+};
+
+
+
+const fetchSingleCoin = async (coinIdentifier: string): Promise<CoinDetail> => {
+  const url = `https://api.coingecko.com/api/v3/coins/${coinIdentifier}`;
+  const options = {
+        method: 'GET',
+        headers: { 'x-cg-demo-api-key': COINGECKO_API_KEY, },
+  };
+
+  const response = await fetch(url, options);
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch coin details');
+    }
+    
+    // The function now returns the full, strongly-typed object.
+    return response.json();
+};
+
+// Hooks 
+
+export function useInfiniteCoinsQuery(timeFrame: TimeFrame, currency: Currency) {
+    return useInfiniteQuery({
+        queryKey: ['allCoins'],
+        queryFn: ({ pageParam = 1 }) => fetchAllCoins(pageParam, 10, timeFrame, currency),
+        initialPageParam: 1,
+        getNextPageParam: (lastPage, allPages) => {
+        // If the last page had items, request the next page.
+        // If the last page was empty, return undefined to stop fetching.
+        return lastPage.length > 0 ? allPages.length + 1 : undefined;
+        },
+    });
+}
+
+// Hook (used inside each card)
+export function useCoinPriceHistoryQuery(coinId: string, timeFrame: TimeFrame, currency: Currency) {
+    let days: number;
+    switch (timeFrame) {
+        case '24h': days = 1; break;
+        case '7d': days = 7; break;
+        case '30d': days = 30; break;
+        case '1y': days = 365; break;
+        default: days = 7;
+    }
+    return useQuery({
+        queryKey: ['coinOhlc', coinId],
+        queryFn: () => fetchCoinOhlc(coinId, days, currency),
+        staleTime: 1000 * 60 * 5, // you can remove and add like refresh control on demand
+        refetchInterval: 1000 * 60 * 5, // you can remove and add like refresh control on demand
+        enabled: !!coinId,
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), //this is to slow down if you are using free version of the api
+        retry: 2,
+    });
+}
+
+// Hook to fetch a single coin by name/symbol
+export function useSingleCoinQuery(coinIdentifier: string) {
+    return useQuery<CoinDetail, Error>({
+        queryKey: ['singleCoin', coinIdentifier.toLowerCase()],
+        queryFn: () => fetchSingleCoin(coinIdentifier),
+        staleTime: 1000 * 60 * 2, // you can remove and add like refresh control on demand
+        refetchInterval: 1000 * 60 * 1, // you can remove and add like refresh control on demand
+        enabled: !!coinIdentifier, // Only fetch if coinIdentifier is provided
+        retry: 2,
+    });
+}
+    ```
+  </StepperItem>
+
+
+<StepperItem title="Step 5: Create a line graph component for the charts LineGraph.tsx">
+    uses React-native-svg to plot path
+
+    ```typescript:LineGraph.tsx
+import React, { useMemo } from "react";
+import { View } from "react-native";
+import Svg, { Path, Defs, LinearGradient, Stop, Circle } from "react-native-svg";
+
+type LineGraphProps = {
+	data: number[];
+	width: number;
+	height: number;
+	color?: string;
+};
+const VERTICAL_PADDING = 4;
+const HORIZONTAL_PADDING = 2;
+
+/**
+ * Generates an SVG path string for a line graph based on the provided data points.
+ *
+ * - Each data point is mapped to an (x, y) coordinate:
+ *    - x is spaced evenly across the width (minus horizontal padding).
+ *    - y is scaled so the min value is at the bottom and the max at the top, with vertical padding.
+ * - The path starts with 'M' (move to) for the first point, then 'L' (line to) for each subsequent point.
+ *
+ * @param data - Array of y-values (numbers) to plot.
+ * @param width - Width of the SVG area.
+ * @param height - Height of the SVG area.
+ * @returns SVG path string for the line graph.
+ */
+const createPath = (data: number[], width: number, height: number): string => {
+	if (!data || data.length < 2) {
+		return `M 0,${height} L ${width},${height}`;
+	}
+
+	const min = Math.min(...data);
+	const max = Math.max(...data);
+	const range = max - min || 1; // Prevent division by zero
+
+	return data.reduce((acc, point, i) => {
+		const x = (i / (data.length - 1)) * (width - 2 * HORIZONTAL_PADDING);
+		// The y value is now offset by VERTICAL_PADDING at both ends
+		const y =
+			VERTICAL_PADDING + (height - 2 * VERTICAL_PADDING - ((point - min) / range) * (height - 2 * VERTICAL_PADDING));
+		return i === 0 ? `M ${x},${y}` : `${acc} L ${x},${y}`;
+	}, "");
+};
+
+const getLastPointCoordinates = (data: number[], width: number, height: number) => {
+	if (!data || data.length === 0) {
+		return { x: width, y: height };
+	}
+	const min = Math.min(...data);
+	const max = Math.max(...data);
+	const range = max - min || 1;
+
+	const lastPoint = data[data.length - 1];
+	const x = width - 2 * HORIZONTAL_PADDING;
+	const y =
+		VERTICAL_PADDING + (height - 2 * VERTICAL_PADDING) - ((lastPoint - min) / range) * (height - 2 * VERTICAL_PADDING);
+
+	return { x, y };
+};
+
+export const LineGraph = ({ data, width, height, color = "#C9FE71" }: LineGraphProps) => {
+	const linePath = useMemo(() => createPath(data, width, height), [data, width, height]);
+
+	// The path for the gradient area is also memoized.
+	const areaPath = useMemo(
+		() => `${linePath} L ${width - 2 * HORIZONTAL_PADDING},${height} L ${HORIZONTAL_PADDING},${height} Z`,
+		[linePath, width, height]
+	);
+
+	const endPoint = useMemo(() => getLastPointCoordinates(data, width, height), [data, width, height]);
+
+	return (
+		<View style={{ width, height }}>
+			<Svg width={width} height={height}>
+				<Defs>
+					<LinearGradient id="gradient" x1="50%" y1="0%" x2="50%" y2="100%">
+						<Stop offset="0%" stopColor={color} stopOpacity={0.3} />
+						<Stop offset="100%" stopColor={color} stopOpacity={0} />
+					</LinearGradient>
+				</Defs>
+				<Path d={areaPath} fill="url(#gradient)" />
+				<Path
+					d={linePath}
+					fill="transparent"
+					stroke={color}
+					strokeWidth={2.5}
+					strokeLinejoin="round"
+					strokeLinecap="round"
+				/>
+				<Circle
+					cx={endPoint.x}
+					cy={endPoint.y}
+					// animatedProps={animatedGlowProps}
+					r={5}
+					fill={color}
+					opacity={0.5}
+				/>
+				<Circle cx={endPoint.x} cy={endPoint.y} r={2} fill={color} />
+			</Svg>
+		</View>
+	);
+};
+    ```
+  </StepperItem>
+
+  <StepperItem title="Step 6: Create file CryptoCard.tsx">
+    Import LineGraph, useCryptoData hook and types created above please check imports it may not be same as yours thank you
+
+    ```typescript:CryptoCard.tsx
+import React, { useMemo } from "react";
+import { View, Text, StyleSheet, ActivityIndicator, Image } from "react-native";
+import { useCoinPriceHistoryQuery, Coin } from "@/hooks/useCryptoData";
+import { LineGraph } from "./LineGraph";
+import { Currency, TimeFrame } from "@/types/coinGecko.types";
+
+type CryptoCardProps = {
+	coin: Coin;
+	timeFrame?: TimeFrame;
+	currency?: Currency
+	positiveColor?: string;
+	negativeColor?: string;
+	cardBgColor?: string;
+	symbolColor?: string;
+	nameColor?: string;
+	priceColor?: string;
+	loadingColor?: string;
+	timeFrameColor?: string;
+};
+
+export const CryptoCard = ({
+	coin,
+	timeFrame = "24h",
+	currency = "usd",
+	positiveColor = "#C9FE71",
+	negativeColor = "#FF6B6B",
+	cardBgColor = "#1E1E1E",
+	symbolColor = "#FFFFFF",
+	nameColor = "#8A8A8A",
+	priceColor = "#FFFFFF",
+	loadingColor = "#C9FE71",
+	timeFrameColor = "#2C2F2F",
+}: CryptoCardProps) => {
+	const { data: history, isLoading, isError } = useCoinPriceHistoryQuery(coin.id, timeFrame, currency);
+
+	const displayData = useMemo(() => {
+        if (!coin) {
+            // Return default values if coin data is not yet loaded
+            return {
+                price: 0,
+                percentageChange: 0,
+                isPositive: true,
+            };
+        }
+
+        // Select the correct percentage change based on the timeFrame prop
+        let percentageChange: number;
+        switch (timeFrame) {
+            case '24h':
+                percentageChange = coin.price_change_percentage_24h_in_currency;
+                break;
+            case '7d':
+                percentageChange = coin.price_change_percentage_7d_in_currency;
+                break;
+            case '30d':
+                percentageChange = coin.price_change_percentage_30d_in_currency;
+                break;
+            case '1y':
+                percentageChange = coin.price_change_percentage_1y_in_currency;
+                break;
+            default:
+                percentageChange = coin.price_change_percentage_24h;
+        }
+
+        return {
+            price: coin.current_price,
+            percentageChange: percentageChange || 0, // Fallback to 0 if the value is null/undefined
+            isPositive: (percentageChange || 0) >= 0,
+        };
+
+    }, [coin, timeFrame]);
+
+	const formattedPrice = useMemo(() => {
+		const price = displayData.price;
+	
+		const options: Intl.NumberFormatOptions = {
+			style: "currency",
+			currency: currency.toUpperCase(),
+		};
+	
+		if (price >= 100000) {
+			options.minimumFractionDigits = 0;
+			options.maximumFractionDigits = 0;
+		} else if (price >= 1) {
+			options.minimumFractionDigits = 2;
+			options.maximumFractionDigits = 2;
+		} else if (price > 0) {
+			// 1. Calculate the number of leading zeros after the decimal.
+			// Math.log10(0.000013689) is approx -4.86. Flipping and flooring gives 4.
+			const numberOfLeadingZeros = Math.floor(-Math.log10(price));
+			// 2. Set the maximum fraction digits to be the number of zeros plus the 2 significant digits you want.
+			options.maximumFractionDigits = numberOfLeadingZeros + 2;
+			// We still set a minimum to avoid showing just "$0.00" for slightly larger fractions.
+			options.minimumFractionDigits = 2;
+	
+		} else {
+			// For a price of exactly 0, use standard formatting.
+			options.minimumFractionDigits = 2;
+			options.maximumFractionDigits = 2;
+		}
+	
+		return new Intl.NumberFormat("en-US", options).format(price);
+	
+	}, [displayData.price, currency])
+
+	const percentageColor = displayData.isPositive ? positiveColor : negativeColor;
+	const percentageBackgroundColor = displayData.isPositive ? `${positiveColor}26` : `${negativeColor}26`;
+
+	return (
+		<View style={[styles.card, { backgroundColor: cardBgColor }]}>
+			<View style={styles.header}>
+				<View style={styles.titleContainer}>
+					<Image source={{ uri: coin.image }} style={styles.icon} />
+					<View style={styles.textInfoContainer}>
+						<Text style={[styles.symbol, { color: symbolColor }]} numberOfLines={1}>
+							{coin.symbol.toUpperCase()}
+						</Text>
+						<Text style={[styles.name, { color: nameColor }]} numberOfLines={1}>
+							{coin.name}
+						</Text>
+					</View>
+				</View>
+
+				<View style={{ flexDirection: "row", gap: 8 }}>
+					<View style={[styles.changeContainer, { backgroundColor: timeFrameColor }]}>
+						<Text style={[styles.timeFrameText, { color: nameColor }]}>{timeFrame}</Text>
+					</View>
+					<View style={[styles.changeContainer, { backgroundColor: percentageBackgroundColor }]}>
+						<Text style={[styles.changeText, { color: percentageColor }]}>
+							{displayData.isPositive ? "+" : ""}
+							{displayData.percentageChange.toFixed(2)} %
+						</Text>
+					</View>
+				</View>
+			</View>
+
+			<View style={styles.footer}>
+				<Text style={[styles.price, { color: priceColor }]}>{formattedPrice}</Text>
+				<View style={styles.graphContainer}>
+					{isLoading ? (
+						<ActivityIndicator color={loadingColor} />
+					) : isError || !history ? (
+						<Text style={[styles.errorText, { color: negativeColor }]}>Chart unavailable</Text>
+					) : (
+						<LineGraph data={history} color={percentageColor} width={150} height={50} />
+					)}
+				</View>
+			</View>
+		</View>
+	);
+};
+
+const styles = StyleSheet.create({
+	card: {
+		borderRadius: 24,
+		padding: 20,
+		marginVertical: 8,
+	},
+	header: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "flex-start",
+		marginBottom: 22,
+	},
+	titleContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+		flex: 1,
+	},
+	icon: {
+		width: 40,
+		height: 40,
+		borderRadius: 20,
+		marginRight: 12,
+	},
+	timeFrameText: {
+		fontWeight: "600",
+		fontSize: 14,
+	},
+	textInfoContainer: {
+		flex: 1,
+	},
+	symbol: {
+		fontSize: 20,
+		fontWeight: "600",
+	},
+	name: {
+		fontSize: 15,
+	},
+	changeContainer: {
+		borderRadius: 12,
+		paddingHorizontal: 10,
+		paddingVertical: 6,
+	},
+	changeText: {
+		fontWeight: "600",
+		fontSize: 14,
+	},
+	footer: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "flex-end",
+	},
+	price: {
+		fontSize: 26,
+		fontWeight: "700",
+	},
+	graphContainer: {
+		width: 150,
+		height: 50,
+		justifyContent: "center",
+		alignItems: "center",
+	},
+	errorText: {
+		fontSize: 12,
+	},
+});
+    ```
+  </StepperItem>
+
+</Stepper>
+
+## Usage
+
+  ```typescript:CoinListPage.tsx
+import React, { useMemo } from 'react';
+import { SafeAreaView, StyleSheet, View, Text, ActivityIndicator } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
+import { useInfiniteCoinsQuery, Coin } from '../hooks/useCryptoData';
+import { CryptoCard } from '@/components/ui/CryptoCard';
+import { Currency, TimeFrame } from '@/types/coinGecko.types';
+import { useAppColors } from '@/hooks/useAppColors';
+
+type ErrorComponentProps = {
+  error?: Error | null;
+}
+
+const CURRENCY: Currency = "usd"; //Change this to your liking
+const TIME_FRAME: TimeFrame = "24h"; //Change this to your liking
+
+
+export default function CoinListPage() {
+  const colors = useAppColors();
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+    error
+  } = useInfiniteCoinsQuery(TIME_FRAME, CURRENCY);
+
+  const coins = useMemo(() => {
+    if (!data?.pages) return [];
+    
+    // 1. Flatten all the pages into a single array of coins.
+    const allCoins = data.pages.flat();
+    
+    // 2. Create a Set of seen IDs to track duplicates.
+    const seenIds = new Set<string>();
+    
+    // 3. Filter the flattened array, only keeping the first occurrence of each coin.
+    return allCoins.filter(coin => {
+      if (seenIds.has(coin.id)) {
+        // If we've already seen this coin ID, it's a duplicate. Skip it.
+        return false;
+      } else {
+        // If it's the first time we've seen this ID, add it to the set and keep it.
+        seenIds.add(coin.id);
+        return true;
+      }
+    });
+  }, [data]);
+
+  
+
+  if (isLoading) {
+    return <View style={styles.center}><ActivityIndicator size="large" /></View>;
+  }
+  if (isError) {
+    return <ErrorComponent error={error} />;
+  }
+
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <Text style={[styles.title, { color: colors.Neutral900 }]}>Coin List {CURRENCY}, {TIME_FRAME}</Text>
+      <FlashList
+        data={coins}
+        renderItem={({ item }) => <CryptoCard coin={item} currency={CURRENCY} timeFrame={TIME_FRAME} />}
+        keyExtractor={(item: Coin) => item.id.toString()}
+        estimatedItemSize={150}
+        onEndReached={() => {
+          if (hasNextPage) fetchNextPage();
+        }}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={isFetchingNextPage ? <ActivityIndicator style={{ margin: 20 }} /> : null}
+        contentContainerStyle={styles.listContent}
+      />
+    </SafeAreaView>
+  );
+};
+
+function ErrorComponent({ error }: ErrorComponentProps) {
+  return (
+    <View style={[styles.center, { padding: 24 }]}>
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorTitle}>
+          Oops!
+        </Text>
+        <Text style={styles.errorMessage}>
+          Failed to load coins.
+        </Text>
+        <Text style={styles.errorDetails}>
+          {error?.message || "Unknown error"}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#000000',
+  },
+  listContent: {
+    paddingHorizontal: 16,
+  },
+  title: {
+		fontSize: 24,
+		fontWeight: "bold",
+		marginBottom: 30,
+		textAlign: "center",
+	}, 
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#000000',
+  },
+  errorContainer: {
+    backgroundColor: "#1E1E1E",
+    borderRadius: 24,
+    padding: 28,
+    alignItems: "center",
+    maxWidth: 340,
+  },
+  errorTitle: {
+    color: "#FF6B6B",
+    fontSize: 22,
+    fontWeight: "700",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  errorMessage: {
+    color: "#fff",
+    fontSize: 16,
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  errorDetails: {
+    color: "#FF6B6B",
+    fontSize: 14,
+    textAlign: "center",
+  },
+  errorText: {
+    color: 'white',
+    fontSize: 16,
+  },
+});
+    ```
+
+## Props
+
+| Prop | Type | Default | Required | Description |
+| :--- | :--- | :------ | :------- | :---------- |
+| `coin` | `Coin` | | Yes | The coin data object containing details like ID, name, symbol, image, and price. |
+| `timeFrame` | `"24h" \| "7d" \| "30d" \| "1y"` | `'24h'` | No | The time period for the price history graph and percentage change calculation. |
+| `currency` | `Currency` | `'usd'` | No | The currency for displaying prices and market data. |
+| `positiveColor` | `string` | `'#C9FE71'` | No | The color for the line graph and percentage text when the price change is positive. |
+| `negativeColor` | `string` | `'#FF6B6B'` | No | The color for the line graph and percentage text when the price change is negative. |
+| `cardBgColor` | `string` | `'#1E1E1E'` | No | The background color of the card component. |
+| `symbolColor` | `string` | `'#FFFFFF'` | No | The color of the coin's symbol text (e.g., 'BTC'). |
+| `nameColor` | `string` | `'#8A8A8A'` | No | The color of the coin's full name text (e.g., 'Bitcoin'). |
+| `priceColor` | `string` | `'#FFFFFF'` | No | The color of the main price display text. |
+| `loadingColor` | `string` | `'#C9FE71'` | No | The color of the `ActivityIndicator` shown while the line graph is loading. |
+| `timeFrameColor` | `string` | `'#2C2F2F'` | No | The background color of the time frame indicator badge. |
+
+

@@ -25,11 +25,13 @@ export default function Note({
   return (
     <div
       className={cn(
-        "border rounded-md px-5 pb-0.5 mt-5 mb-7 text-sm tracking-wide",
+        "border rounded-md px-5 py-4 mt-5 mb-7 text-sm tracking-wide", // Adjusted padding for better spacing
         noteClassNames
       )}
     >
-      <p className="font-bold -mb-2.5">{title}:</p> {children}
+      {/* CHANGED: Use a div instead of a p for the title */}
+      <div className="font-bold mb-2">{title}:</div>
+      <div className="prose prose-sm max-w-none dark:prose-invert">{children}</div>
     </div>
   );
 }
