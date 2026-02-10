@@ -18,6 +18,8 @@ type PageProps = {
   params: Promise<{ slug: string }>;
 };
 
+export const dynamicParams = false;
+
 export async function generateMetadata(props: PageProps) {
   const params = await props.params;
   const { slug } = params;

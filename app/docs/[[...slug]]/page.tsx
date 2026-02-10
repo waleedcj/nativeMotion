@@ -1,7 +1,7 @@
 import DocsBreadcrumb from "@/components/docs-breadcrumb";
 import Pagination from "@/components/pagination";
 // import Toc from "@/components/toc";
-import { page_routes } from "@/lib/routes-config";
+import { docs_slugs } from "@/lib/routes-config";
 import { notFound } from "next/navigation";
 import { getCompiledDocsForSlug, getDocFrontmatter } from "@/lib/markdown";
 import { Typography } from "@/components/typography";
@@ -13,11 +13,14 @@ type PageProps = {
   params: Promise<{ slug: string[] }>;
 };
 
+export const dynamicParams = false;
+
 export default async function DocsPage(props: PageProps) {
   const params = await props.params;
   const { slug = [] } = params;
 
   const pathName = slug.join("/");
+  const fullDocUrl = pathName ? `${SITE_URL}/docs/${pathName}` : `${SITE_URL}/docs`;
   const res = await getCompiledDocsForSlug(pathName);
 
   if (!res) notFound();
@@ -53,7 +56,7 @@ export default async function DocsPage(props: PageProps) {
                   "@type": "TechArticle", // or "Article" or "HowTo"
                   "headline": res.frontmatter.title,
                   "description": res.frontmatter.description,
-                  "image": res.frontmatter.ogImage ? new URL(res.frontmatter.ogImage, SITE_URL).toString() : new URL('/default-og-image.png', SITE_URL).toString(),
+                  "image": res.frontmatter.ogImage ? new URL(res.frontmatter.ogImage, SITE_URL).toString() : new URL('/opengraph-image.png', SITE_URL).toString(),
                   "author": {
                     "@type": "Organization", // or "Person"
                     "name": res.frontmatter.author || "Your Documentation Team"
@@ -63,14 +66,14 @@ export default async function DocsPage(props: PageProps) {
                     "name": "NativeMotion",
                     "logo": {
                       "@type": "ImageObject",
-                      "url": new URL('/nmlogo.png.png', SITE_URL).toString() // URL to your site's logo
+                      "url": new URL('/nmlogo.png', SITE_URL).toString() // URL to your site's logo
                     }
                   },
                   "datePublished": res.frontmatter.lastModified || new Date().toISOString(), // Use a creation date if available
                   "dateModified": res.frontmatter.lastModified || new Date().toISOString(),
                   "mainEntityOfPage": {
                     "@type": "WebPage",
-                    "@id": `${SITE_URL}/docs/${pathName}`
+                    "@id": fullDocUrl
                   }
                   // For "HowTo" schema, you'd add "step" properties.
                   // For "FAQPage" schema, you'd add "mainEntity" with questions and answers.
@@ -93,6 +96,7 @@ export async function generateMetadata(props: PageProps) {
   const { slug = [] } = params;
 
   const pathName = slug.join("/");
+  const fullUrl = pathName ? `${SITE_URL}/docs/${pathName}` : `${SITE_URL}/docs`;
   const docFrontmatter = await getDocFrontmatter(pathName); // Renamed 'res' for clarity
 
   if (!docFrontmatter) {
@@ -103,7 +107,6 @@ export async function generateMetadata(props: PageProps) {
   }
 
   const { title, description, keywords, ogImage, author, lastModified } = docFrontmatter;
-  const fullUrl = `${SITE_URL}/docs/${pathName}`; // Construct the full URL
 
   const images = ogImage
     ? [{ url: new URL(ogImage, SITE_URL).toString(), width: 1200, height: 675, alt: title }]
@@ -143,7 +146,5 @@ export async function generateMetadata(props: PageProps) {
 
 
 export function generateStaticParams() {
-  return page_routes.map((item) => ({
-    slug: item.href.split("/").slice(1),
-  }));
+  return docs_slugs.map((slug) => ({ slug }));
 }

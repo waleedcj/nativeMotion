@@ -80,6 +80,11 @@ export const ROUTES: EachRoute[] = [
 ];
 
 type Page = { title: string; href: string };
+type RouteSlug = string[];
+
+function hrefToSegments(href: string): string[] {
+  return href.split("/").filter(Boolean);
+}
 
 function getRecurrsiveAllLinks(node: EachRoute) {
   const ans: Page[] = [];
@@ -93,4 +98,24 @@ function getRecurrsiveAllLinks(node: EachRoute) {
   return ans;
 }
 
+function getRecursiveDocSlugs(
+  node: EachRoute,
+  parentSegments: RouteSlug = []
+): RouteSlug[] {
+  const currentSegments = [...parentSegments, ...hrefToSegments(node.href)];
+  const ans: RouteSlug[] = [currentSegments];
+
+  node.items?.forEach((subNode) => {
+    ans.push(...getRecursiveDocSlugs(subNode, currentSegments));
+  });
+
+  return ans;
+}
+
 export const page_routes = ROUTES.map((it) => getRecurrsiveAllLinks(it)).flat();
+
+// Includes /docs root ([]), section indexes, and leaf pages.
+export const docs_slugs: RouteSlug[] = [
+  [],
+  ...ROUTES.map((it) => getRecursiveDocSlugs(it)).flat(),
+];

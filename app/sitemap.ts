@@ -1,24 +1,31 @@
 // app/sitemap.ts
 import { MetadataRoute } from 'next';
-import { page_routes } from '@/lib/routes-config'; // Adjust path as needed
+import { docs_slugs } from '@/lib/routes-config';
+import { getAllBlogStaticPaths } from '@/lib/markdown';
 
 const SITE_URL =  process.env.NEXT_PUBLIC_SITE_URL || "https://nativemotion.dev"
 
+export const dynamic = "force-static";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // Assuming page_routes contains all your document routes like { href: '/docs/introduction', ... }
-  // And potentially other non-docs routes
-  const docPages = page_routes.map((item) => {
-    // You might need to fetch lastModified date for each page if you want to include it
-    // For simplicity, using a static date or omitting it for now
+  const docPages = docs_slugs.map((slug) => {
+    const docPath = slug.length === 0 ? "/docs" : `/docs/${slug.join("/")}`;
     return {
-      url: `${SITE_URL}/docs/${item.href}`, // Ensure item.href starts with '/' e.g., /docs/slug
-      lastModified: new Date(), // Or fetch from frontmatter/git history
-      changeFrequency: 'weekly' as const, // Or 'monthly', 'daily'
+      url: `${SITE_URL}${docPath}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
       priority: 1
     };
   });
 
-  // Add other static pages if you have them (e.g., homepage, about page)
+  const blogSlugs = await getAllBlogStaticPaths();
+  const blogPages = (blogSlugs ?? []).map((slug) => ({
+    url: `${SITE_URL}/blog/${slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.8,
+  }));
+
   const staticPages = [
     {
       url: SITE_URL,
@@ -32,8 +39,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly' as const,
       priority: 0.8,
     },
-    // ... other static pages
   ];
 
-  return [...staticPages, ...docPages];
+  return [...staticPages, ...docPages, ...blogPages];
 }

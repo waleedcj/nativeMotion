@@ -1,8 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  output: "export",
   images: {
+    // Static export has no Image Optimization API route.
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",
